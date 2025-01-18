@@ -15,35 +15,45 @@ type User = {
 
 function MyApp({ Component, pageProps }: AppProps & { site: Site }) {
   const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <GoogleOAuthProvider clientId="1056104670088-ci05aih7o27hp9aj22ppipmh6n7a2174.apps.googleusercontent.com">
       <AudioProvider>
         <GlobalLayout site={pageProps.site}>
-          {user ? (
-            <div>
-              <p>Welcome, {user.email}</p>
-              <p>User ID: {user.sub}</p>
-              <button onClick={() => {
-                googleLogout();
-                setUser(null);
-              }}>Logout</button>
-            </div>
-          ) : (
-            <GoogleLogin
-              onSuccess={credentialResponse => {
-                if (credentialResponse.credential) {
-                  const decoded = jwtDecode<User>(credentialResponse.credential);
-                  setUser(decoded);
-                } else {
-                  console.log('Credential is undefined');
-                }
-              }}
-              onError={() => {
-                console.log('Login Failed');
-              }}
-            />
-          )}
+          <div style={{ position: 'absolute', top: 10, right: 10 }}>
+            <button onClick={() => setMenuOpen(!menuOpen)}>
+              Menu
+            </button>
+            {menuOpen && (
+              <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid #ccc', padding: '10px' }}>
+                {user ? (
+                  <div>
+                    <p>Welcome, {user.email}</p>
+                    <p>User ID: {user.sub}</p>
+                    <button onClick={() => {
+                      googleLogout();
+                      setUser(null);
+                    }}>Logout</button>
+                  </div>
+                ) : (
+                  <GoogleLogin
+                    onSuccess={credentialResponse => {
+                      if (credentialResponse.credential) {
+                        const decoded = jwtDecode<User>(credentialResponse.credential);
+                        setUser(decoded);
+                      } else {
+                        console.log('Credential is undefined');
+                      }
+                    }}
+                    onError={() => {
+                      console.log('Login Failed');
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
           <Component {...pageProps} />
         </GlobalLayout>
       </AudioProvider>
