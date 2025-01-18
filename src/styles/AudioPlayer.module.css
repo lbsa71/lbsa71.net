@@ -1,0 +1,182 @@
+.audioPlayer {
+  width: 100%;
+  margin: 0;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.trackInfo {
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.trackInfo p {
+  min-height: 4em;
+  margin: 0;
+  /* white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; */
+}
+
+.controls {
+  display: grid;
+  grid-template-areas:
+    "nav play nav2 mute"
+    "seek seek seek seek"
+    "time time time time";
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.playPauseButton {
+  grid-area: play;
+  justify-self: center;
+}
+
+.navButton:first-of-type {
+  grid-area: nav;
+  justify-self: end;
+}
+
+.navButton:last-of-type {
+  grid-area: nav2;
+  justify-self: start;
+}
+
+.volumeControl {
+  grid-area: mute;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seekBar {
+  grid-area: seek;
+  width: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  border-radius: 2px;
+}
+
+.timeDisplay {
+  grid-area: time;
+  text-align: center;
+  font-size: 13px;
+  color: #4a4a4a;
+}
+
+.playPauseButton,
+.navButton,
+.muteButton {
+  background-color: #4a4a4a;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.playPauseButton:hover,
+.navButton:hover:not(.disabled),
+.muteButton:hover {
+  background-color: #3a3a3a;
+}
+
+.navButton.disabled,
+.navButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #6c6c6c;
+}
+
+.volumeSlider {
+  width: 40px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  border-radius: 2px;
+}
+
+.seekBar::-webkit-slider-thumb,
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #4a4a4a;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.seekBar::-moz-range-thumb,
+.volumeSlider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #4a4a4a;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.seekBar:hover::-webkit-slider-thumb,
+.volumeSlider:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.seekBar:hover::-moz-range-thumb,
+.volumeSlider:hover::-moz-range-thumb {
+  transform: scale(1.2);
+}
+
+@media (max-width: 768px) {
+  .audioPlayer {
+    padding: 10px;
+  }
+
+  .controls {
+    gap: 6px;
+  }
+
+  .playPauseButton,
+  .navButton,
+  .muteButton {
+    width: 24px;
+    height: 24px;
+  }
+
+  .volumeSlider {
+    width: 36px;
+  }
+
+  .timeDisplay {
+    font-size: 12px;
+  }
+}

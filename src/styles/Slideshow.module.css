@@ -1,0 +1,72 @@
+.slideshow {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+.zoomedImage {
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
+.navButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 24px;
+  transition: background-color 0.3s ease;
+  z-index: 2;
+}
+
+.navButton:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.prevButton {
+  left: 10px;
+}
+
+.nextButton {
+  right: 10px;
+}
+
+.counter {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}

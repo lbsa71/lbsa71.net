@@ -1,0 +1,173 @@
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  line-height: 1.6;
+  padding: 20px;
+  /* max-width: 800px; */
+  margin: auto;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #444;
+}
+
+p {
+  margin-bottom: 20px;
+}
+
+/* Links */
+a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Navigation */
+.navbar {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.navbar a {
+  margin-right: 10px;
+  color: #007bff;
+}
+
+/* Footer */
+footer {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  color: #777;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Utility Classes */
+.container {
+  margin: auto;
+  max-width: 800px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Buttons */
+.button,
+button {
+  display: inline-block;
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.button:hover,
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Forms */
+input[type="text"],
+input[type="email"],
+textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="submit"] {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+@media only screen and (max-width: 600px) {
+  body {
+    padding: 5px;
+  }
+
+  .navbar {
+    margin-bottom: 10px;
+  }
+}
+
+/* Blockquote for Poems or Quotes */
+blockquote {
+  margin: 20px 0;
+  padding: 0 20px 0 20p;
+  background-color: #f9f9f9;
+  border-left: 5px solid #ccc;
+  font-style: italic;
+  color: #555;
+  position: relative; /* Needed for absolute positioning of ::before element */
+}
+
+/* Styling for first paragraph in blockquote for opening quote */
+blockquote p:first-child:before {
+  content: open-quote;
+  font-size: 4em;
+  /* line-height: 0; */
+  position: absolute; /* Absolutely position the opening quote */
+  left: -5px; /* Adjust as necessary */
+  top: -30px; /* Adjust as necessary */
+  color: #ccc;
+}
+
+/* Adjustments for all <p> within blockquote */
+blockquote p {
+  margin: 10px 0px 20px 35px;
+  display: block;
+  font-family: "Georgia", serif;
+  font-size: 1.2em;
+}
+
+/* Adjustments for last paragraph in blockquote for citation */
+blockquote p:last-child {
+  margin-top: 20px;
+  text-align: right;
+}
+
+blockquote cite {
+  display: block;
+  text-align: right;
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 10px;
+}
+
+blockquote cite:before {
+  content: "\2014 \2009"; /* Adds a dash before the citation for stylistic flair */
+}
+
+.content-document {
+  max-width: 800px;
+}
