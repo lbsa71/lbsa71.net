@@ -1,6 +1,7 @@
 import MarkdownEditor from "@/components/MarkdownEditor";
-import { ContentDocument } from "@/lib/getSite";
+import { Config, ContentDocument, ReqContext } from "@/lib/getSite";
 import axios from "axios";
+import getConfig from "next/config";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -45,7 +46,7 @@ const fetchDocument = (
     });
 };
 
-const EditorPage = () => {
+const EditorPage = ({ _config }: { _config: Config }) => {
   const router = useRouter();
   const { user_id, document_id } = router.query;
 
@@ -62,7 +63,7 @@ const EditorPage = () => {
     }
   }, [user_id, document_id]);
 
-  return <MarkdownEditor document={document} setDocument={setDocument} />;
+  return <MarkdownEditor _config={_config} document={document} setDocument={setDocument} />;
 };
 
 export default EditorPage;

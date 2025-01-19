@@ -38,7 +38,7 @@ export const getConfig = async () => {
 
   const config = data.Items[0] as Config;
 
-  console.error("Config", JSON.stringify(config, null, 2));
+  // console.error("Config", JSON.stringify(config, null, 2));
 
   return config;
 };

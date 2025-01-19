@@ -1,11 +1,12 @@
 import React, { Dispatch, SetStateAction, use, useEffect } from "react";
 import axios from "axios";
 import { MarkdownSyntaxHelp } from "./MarkdownSyntaxHelp";
-import { ContentDocument, Site } from "@/lib/getSite";
+import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { defaultDocument } from "@/pages/edit/[user_id]/[document_id]";
 
 type MarkdownEditorProps = {
+  _config: Config;
   document: ContentDocument;
   setDocument: Dispatch<SetStateAction<ContentDocument>>;
 };
@@ -13,8 +14,8 @@ type MarkdownEditorProps = {
 const MarkdownRenderer = (
   handleSave: () => Promise<void>,
   handleDelete: () => Promise<void>,
-  site: Site,
   document: ContentDocument,
+  site: Site,
   setDocument: React.Dispatch<React.SetStateAction<ContentDocument>>
 ) => {
   const isEditMode = document.user_id && document.document_id;
@@ -158,26 +159,20 @@ const MarkdownRenderer = (
   );
 };
 
-export const MarkdownEditor = async ({
+export const MarkdownEditor = ({
   document,
   setDocument,
+  _config
 }: MarkdownEditorProps) => {
-  const [site, setSite] = React.useState<Site>();
   const { user_id, document_id } = document;
 
 
-  useEffect(() => {
-    if (user_id) {
-
-      fetchSiteByUserId(user_id).then((site: Site) => setSite(site));
-    }
-  });
-
-  if (!site) {
-    return <div>Loading...</div>;
-  }
-
   const isEditMode = user_id && document_id;
+
+  if (!user_id)
+    return null;
+
+  const site = findSiteByUserId(_config, user_id);
 
   const handleSave = async () => {
     const endpoint = isEditMode ? "/api/update" : "/api/create";
@@ -212,8 +207,8 @@ export const MarkdownEditor = async ({
   return MarkdownRenderer(
     handleSave,
     handleDelete,
-    site,
     document,
+    site,
     setDocument
   );
 };
