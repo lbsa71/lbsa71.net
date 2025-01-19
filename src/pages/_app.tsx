@@ -17,6 +17,8 @@ function MyApp({ Component, pageProps }: AppProps & { site: Site }) {
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  console.log("pageProps", JSON.stringify(pageProps, null, 2));
+
   return (
     <GoogleOAuthProvider clientId="1056104670088-ci05aih7o27hp9aj22ppipmh6n7a2174.apps.googleusercontent.com">
       <AudioProvider>
@@ -67,15 +69,22 @@ MyApp.getInitialProps = async (appContext: any) => {
     : {};
   let site: Site;
 
+  console.log("--- resolving site");
+
   if (appContext?.ctx?.req?.headers?.host) {
     const host = appContext.ctx.req.headers.host;
+    console.log("Host", host);
+
     const { fetchSiteByDomain } = await import("./api/lib/dynamodbClient");
     site = await fetchSiteByDomain(host);
+    console.log("Site", JSON.stringify(site, null, 2));
   } else {
+    console.log("--- No host header - cannot determine site");
+
     throw new Error("No host header - cannot determine site");
   }
 
-  return { ...appProps, site };
+  return { ...appProps, site, pageProps: appProps.pageProps || {} };
 };
 
 export default MyApp;
