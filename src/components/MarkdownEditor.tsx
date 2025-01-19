@@ -1,10 +1,9 @@
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, use, useEffect } from "react";
 import axios from "axios";
 import { MarkdownSyntaxHelp } from "./MarkdownSyntaxHelp";
 import { ContentDocument, Site } from "@/lib/getSite";
 import { DocumentRenderer } from "./DocumentRenderer";
 import { defaultDocument } from "@/pages/edit/[user_id]/[document_id]";
-import { fetchSiteByUserId } from "@/pages/api/lib/dynamodbClient";
 
 type MarkdownEditorProps = {
   document: ContentDocument;
@@ -163,9 +162,20 @@ export const MarkdownEditor = async ({
   document,
   setDocument,
 }: MarkdownEditorProps) => {
+  const [site, setSite] = React.useState<Site>();
   const { user_id, document_id } = document;
 
-  const site = await fetchSiteByUserId(user_id);
+
+  useEffect(() => {
+    if (user_id) {
+
+      fetchSiteByUserId(user_id).then((site: Site) => setSite(site));
+    }
+  });
+
+  if (!site) {
+    return <div>Loading...</div>;
+  }
 
   const isEditMode = user_id && document_id;
 

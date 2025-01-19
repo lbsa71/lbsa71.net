@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { AppProps } from "next/app";
 import GlobalLayout from "../components/GlobalLayout";
-import { Site } from "../lib/getSite";
+import { Config, findSiteByDomain, Site } from "../lib/getSite";
 import { AudioProvider } from "../context/AudioContext";
 import { GoogleOAuthProvider, GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
@@ -13,7 +13,7 @@ type User = {
   sub: string;
 };
 
-function MyApp({ Component, pageProps }: AppProps & { site: Site }) {
+function MyApp({ Component, pageProps }: AppProps & { site: Site; config: Config }) {
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -68,15 +68,18 @@ MyApp.getInitialProps = async (appContext: any) => {
     ? await appContext.Component.getInitialProps(appContext.ctx)
     : {};
   let site: Site;
+  let config: Config;
 
   console.log("--- resolving site");
 
   if (appContext?.ctx?.req?.headers?.host) {
+    const { getConfig } = await import("./api/lib/dynamodbClient");
+    config = await getConfig();
+
     const host = appContext.ctx.req.headers.host;
     console.log("Host", host);
 
-    const { fetchSiteByDomain } = await import("./api/lib/dynamodbClient");
-    site = await fetchSiteByDomain(host);
+    site = await findSiteByDomain(config, host);
     console.log("Site", JSON.stringify(site, null, 2));
   } else {
     console.log("--- No host header - cannot determine site");
@@ -84,7 +87,7 @@ MyApp.getInitialProps = async (appContext: any) => {
     throw new Error("No host header - cannot determine site");
   }
 
-  return { ...appProps, site, pageProps: appProps.pageProps || {} };
+  return { ...appProps, config, site, pageProps: appProps.pageProps || {} };
 };
 
 export default MyApp;
