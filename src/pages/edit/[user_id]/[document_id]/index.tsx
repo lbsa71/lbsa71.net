@@ -31,9 +31,6 @@ const fetchDocument = (
     )
     .then((response) => {
       const document = response.data;
-
-      console.error("Fetched document", document);
-
       setDocument(document);
     })
     .catch((error) => {

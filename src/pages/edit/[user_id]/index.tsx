@@ -21,9 +21,6 @@ const EditList = () => {
       .get<any, APIContentDocuments>(`/api/list?user_id=${user_id}`)
       .then((response) => {
         const documents = response.data;
-
-        console.error("Fetched document", documents.length);
-
         setDocuments(documents);
       })
       .catch((error) => console.error("Failed to fetch document", error));
