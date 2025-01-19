@@ -8,6 +8,7 @@ export type Config = {
 export type Site = {
   title: string;
   user_id: string;
+  admin_user_id: string;
   urls: string[];
   playlists: string[];
   feed?: string;
@@ -25,19 +26,11 @@ export type Site = {
 type SiteConfig = Partial<Site> & {
   user_id: string;
   urls: string[];
+  admin_user_id: string;
 };
 
 const wrap = (
-  site: Optional<
-    Site,
-    | "theme"
-    | "byline"
-    | "title"
-    | "media_url"
-    | "media_folder"
-    | "theme"
-    | "playlists"
-  >
+  site: SiteConfig
 ): Site => {
 
   const media_folder = site.media_folder ?? site.user_id;
@@ -100,4 +93,3 @@ export function findSiteByUserId(config: Config, user_id: string) {
 
   return wrap(site);
 }
-
