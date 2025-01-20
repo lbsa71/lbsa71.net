@@ -3,7 +3,6 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchSiteByContext, fetchSiteByUserId } from "@/pages/api/lib/dynamodbClient";
 import axios from "axios";
 import { GetServerSidePropsContext } from "next";
-import router, { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 type APIContentDocuments = {

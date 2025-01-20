@@ -1,10 +1,27 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { jwtDecode } from "jwt-decode";
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  sub: string;
+};
 import { dynamoDBClient } from "./lib/dynamodbClient";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
+  const { authorization } = req.headers;
+  if (!authorization) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const token = authorization.split(" ")[1];
+  const user = jwtDecode<User>(token);
+
   const {
     user_id,
+    admin_user_id,
     document_id,
     content,
     hero_img,
@@ -15,6 +32,10 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
 
   if (!user_id || !document_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  if (user.sub !== admin_user_id) {
+    return res.status(403).json({ error: "Forbidden: You do not have access to update this document" });
   }
 
   try {
