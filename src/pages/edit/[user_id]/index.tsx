@@ -1,18 +1,30 @@
-import { ContentDocument } from "@/lib/getSite";
+import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
+import { User } from "@/pages/_app";
+import { fetchSiteByContext, fetchSiteByUserId } from "@/pages/api/lib/dynamodbClient";
 import axios from "axios";
-import { useRouter } from "next/router";
+import { GetServerSidePropsContext } from "next";
+import router, { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 type APIContentDocuments = {
   data: ContentDocument[];
 };
 
-const EditList = () => {
-  const router = useRouter();
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+
+  const { user_id } = context.params || {};
+
+  const site = await fetchSiteByUserId(user_id as string);
+
+  return { props: { site } };
+};
+
+const EditList = ({ site, user }: { site: Site, user: User }) => {
 
   const [documents, setDocuments] = useState<ContentDocument[]>();
-
-  const { user_id } = router.query;
+  const user_id = site.user_id;
 
   useEffect(() => {
     if (!user_id) return;
@@ -26,14 +38,13 @@ const EditList = () => {
       .catch((error) => console.error("Failed to fetch document", error));
   }, [user_id]);
 
-  if (typeof user_id !== "string") {
-    return {
-      redirect: {
-        destination: "/404",
-        permanent: false,
-      },
-    };
+  console.log("site", JSON.stringify(site, null, 2));
+  console.log("user", JSON.stringify(user, null, 2));
+
+  if (typeof user_id !== "string" || !site || !user || user.sub !== site.admin_user_id) {
+    return <div>Unauthorized</div>;
   }
+
   return (
     <>
       <h1>Documents for {user_id}</h1>

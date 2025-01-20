@@ -8,7 +8,7 @@ import { GoogleOAuthProvider, GoogleLogin, googleLogout } from '@react-oauth/goo
 import { jwtDecode } from 'jwt-decode';
 import "../styles/globals.css";
 
-type User = {
+export type User = {
   email: string;
   sub: string;
 };
