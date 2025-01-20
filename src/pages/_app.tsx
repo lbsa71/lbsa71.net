@@ -4,60 +4,40 @@ import { AppProps } from "next/app";
 import GlobalLayout from "../components/GlobalLayout";
 import { Config, findSiteByDomain, Site } from "../lib/getSite";
 import { AudioProvider } from "../context/AudioContext";
-import { GoogleOAuthProvider, GoogleLogin, googleLogout } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
+import { AuthProvider } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
 
 export type User = {
+  id: string;
+  name: string;
   email: string;
   sub: string;
 };
 
 function MyApp({ Component, pageProps }: AppProps & { site: Site; config: Config }) {
-  const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <GoogleOAuthProvider clientId="1056104670088-ci05aih7o27hp9aj22ppipmh6n7a2174.apps.googleusercontent.com">
+    <AuthProvider>
       <AudioProvider>
         <GlobalLayout site={pageProps.site}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}>
-            <button onClick={() => setMenuOpen(!menuOpen)}>
+            <button onClick={() => setMenuOpen((prev) => !prev)}>
               Menu
             </button>
             {menuOpen && (
               <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid #ccc', padding: '10px' }}>
-                {user ? (
-                  <div>
-                    <p>Welcome, {user.email}</p>
-                    <p>User ID: {user.sub}</p>
-                    <button onClick={() => {
-                      googleLogout();
-                      setUser(null);
-                    }}>Logout</button>
-                  </div>
-                ) : (
-                  <GoogleLogin
-                    onSuccess={credentialResponse => {
-                      if (credentialResponse.credential) {
-                        const decoded = jwtDecode<User>(credentialResponse.credential);
-                        setUser(decoded);
-                      } else {
-                        console.log('Credential is undefined');
-                      }
-                    }}
-                    onError={() => {
-                      console.log('Login Failed');
-                    }}
-                  />
-                )}
+                <AuthMenu />
               </div>
             )}
           </div>
           <Component {...pageProps} />
         </GlobalLayout>
       </AudioProvider>
-    </GoogleOAuthProvider>
+    </AuthProvider>
   );
 }
 
@@ -84,6 +64,35 @@ MyApp.getInitialProps = async (appContext: any) => {
   const pageProps = { ...appProps.pageProps, _config, site };
 
   return { ...appProps, pageProps };
+};
+
+const AuthMenu: React.FC = () => {
+  const { user, login, logout } = useAuth();
+
+  return (
+    <div>
+      {user ? (
+        <div>
+          <p>Welcome, {user.email}</p>
+          <button onClick={logout}>Logout</button>
+        </div>
+      ) : (
+        <GoogleLogin
+          onSuccess={credentialResponse => {
+            if (credentialResponse.credential) {
+              const decoded = jwtDecode<User>(credentialResponse.credential);
+              login(decoded);
+            } else {
+              console.log('Credential is undefined');
+            }
+          }}
+          onError={() => {
+            console.log('Login Failed');
+          }}
+        />
+      )}
+    </div>
+  );
 };
 
 export default MyApp;

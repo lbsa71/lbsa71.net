@@ -1,5 +1,5 @@
 import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
-import { User } from "@/pages/_app";
+import { useAuth } from "@/context/AuthContext";
 import { fetchSiteByContext, fetchSiteByUserId } from "@/pages/api/lib/dynamodbClient";
 import axios from "axios";
 import { GetServerSidePropsContext } from "next";
@@ -21,7 +21,8 @@ export const getServerSideProps = async (
   return { props: { site } };
 };
 
-const EditList = ({ site, user }: { site: Site, user: User }) => {
+const EditList = ({ site }: { site: Site }) => {
+  const { user } = useAuth();
 
   const [documents, setDocuments] = useState<ContentDocument[]>();
   const user_id = site.user_id;
