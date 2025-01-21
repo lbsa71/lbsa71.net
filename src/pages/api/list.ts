@@ -1,5 +1,5 @@
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDBClient } from "@/pages/api/lib/dynamodbClient";
+import { dynamoDb } from "@/lib/dynamodb";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { ContentDocument } from "@/lib/getSite";
 import { localDocuments } from "./localDocuments";
@@ -17,8 +17,7 @@ export const listDocuments = async (user_id: string) => {
     },
   });
 
-  const data = await dynamoDBClient.send(queryCommand);
-
+  const data = await dynamoDb.send(queryCommand);
   return data.Items as ContentDocument[] | undefined;
 };
 
