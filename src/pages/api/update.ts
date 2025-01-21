@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { UpdateCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { UpdateCommand, PutCommand, dynamoDb } from "@/lib/dynamodb";
 import { jwtDecode } from "jwt-decode";
 
 type User = {
@@ -8,7 +8,6 @@ type User = {
   email: string;
   sub: string;
 };
-import { dynamoDBClient } from "./lib/dynamodbClient";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { authorization } = req.headers;
@@ -41,9 +40,9 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   try {
     const version_id = new Date().toISOString();
 
-    await dynamoDBClient.send(
+    await dynamoDb.send(
       new PutCommand({
-        TableName: "lbsa71_net_backup", // Separate table or a designated section for versions
+        TableName: "lbsa71_net_backup",
         Item: {
           user_id,
           document_id,
@@ -57,7 +56,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
       })
     );
 
-    const result = await dynamoDBClient.send(
+    const result = await dynamoDb.send(
       new UpdateCommand({
         TableName: "lbsa71_net",
         Key: { user_id, document_id },
@@ -75,9 +74,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
     );
 
     const contentDocument = { user_id, document_id, ...result.Attributes };
-    res
-      .status(200)
-      .json({ message: "Post updated successfully", ...contentDocument });
+    res.status(200).json({ message: "Post updated successfully", ...contentDocument });
   } catch (error) {
     console.error("Update Error:", error);
     res.status(500).json({ error: "Failed to update post" });

@@ -1,8 +1,7 @@
 import { randomUUID } from "crypto";
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDBClient } from "./lib/dynamodbClient";
+import { PutCommand, dynamoDb } from "@/lib/dynamodb";
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, content } = req.body;
@@ -24,7 +23,7 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
-    const data = await dynamoDBClient.send(
+    const data = await dynamoDb.send(
       new PutCommand({
         TableName: "lbsa71_net",
         Item: {

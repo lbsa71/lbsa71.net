@@ -1,13 +1,12 @@
 // api/delete.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDBClient } from "./lib/dynamodbClient";
+import { DeleteCommand, dynamoDb } from "@/lib/dynamodb";
 
 const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, document_id } = req.body;
 
   try {
-    await dynamoDBClient.send(
+    await dynamoDb.send(
       new DeleteCommand({
         TableName: "lbsa71_net",
         Key: {

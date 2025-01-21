@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDBClient } from "@/pages/api/lib/dynamodbClient";
+import { GetCommand, dynamoDb } from "@/lib/dynamodb";
 import { ContentDocument } from "@/lib/getSite";
 import { localDocument } from "./localDocuments";
 
@@ -10,7 +9,7 @@ export const getDocument = async (user_id: string, document_id: string) => {
   }
 
   return (
-    await dynamoDBClient.send(
+    await dynamoDb.send(
       new GetCommand({
         TableName: "lbsa71_net",
         Key: {
