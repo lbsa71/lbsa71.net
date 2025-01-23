@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
 import { parseMarkdown } from '../../lib/markdownParser';
-import { TrackInfo } from '../document-renderer/types';
+import { TrackInfo } from './types';
 import { useRouter } from 'next/router';
 import { ContentDocument } from '../../lib/getSite';
 
-interface UseTrackManagementProps {
+type UseTrackManagementProps = {
   content: string;
   document_id: string;
   playListItems: ContentDocument[];
   duration: number;
   currentTime: number;
-}
+};
+
+type UseTrackManagementResult = {
+  tracks: TrackInfo[];
+  currentTrackIndex: number;
+  currentTrack: TrackInfo | null;
+  onAudioEnd: () => void;
+  onTrackChange: (index: number) => void;
+};
 
 export const useTrackManagement = ({
   content,
@@ -18,14 +26,14 @@ export const useTrackManagement = ({
   playListItems,
   duration,
   currentTime,
-}: UseTrackManagementProps) => {
+}: UseTrackManagementProps): UseTrackManagementResult => {
   const router = useRouter();
   const [tracks, setTracks] = useState<TrackInfo[]>([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
 
   useEffect(() => {
-    const parsed = parseMarkdown(content);
-    const newTracks = parsed.tracks.map(track => ({
+    const { tracks: parsedTracks } = parseMarkdown(content);
+    const newTracks = parsedTracks.map(track => ({
       title: track.title,
       artist: track.artist,
       album: track.album,
@@ -39,18 +47,13 @@ export const useTrackManagement = ({
   }, [content]);
 
   useEffect(() => {
-    if (tracks.length > 0 && duration > 0) {
-      // Find the last track whose position is less than or equal to the current time
-      const newIndex = tracks.reduce((lastIndex, track, currentIndex) => {
-        if (track.position <= currentTime) {
-          return currentIndex;
-        }
-        return lastIndex;
-      }, 0);
+    if (tracks.length === 0 || duration <= 0) return;
 
-      if (newIndex !== currentTrackIndex) {
-        setCurrentTrackIndex(newIndex);
-      }
+    const newIndex = tracks.reduce((lastIndex, track, currentIndex) => 
+      track.position <= currentTime ? currentIndex : lastIndex, 0);
+
+    if (newIndex !== currentTrackIndex) {
+      setCurrentTrackIndex(newIndex);
     }
   }, [currentTime, duration, tracks, currentTrackIndex]);
 
@@ -58,19 +61,24 @@ export const useTrackManagement = ({
     const nextIndex = currentTrackIndex + 1;
     if (nextIndex < tracks.length) {
       setCurrentTrackIndex(nextIndex);
-    } else {
-      const currentDocIndex = playListItems.findIndex((item) => item.document_id === document_id);
-      const nextDocIndex = currentDocIndex + 1;
-      if (nextDocIndex < playListItems.length) {
-        const nextItem = playListItems[nextDocIndex];
-        const nextUrl = `/read/${nextItem.document_id}?play`;
-        router.push(nextUrl);
-      }
+      return;
+    }
+
+    const currentDocIndex = playListItems.findIndex(
+      (item) => item.document_id === document_id
+    );
+    const nextDocIndex = currentDocIndex + 1;
+
+    if (nextDocIndex < playListItems.length) {
+      const nextItem = playListItems[nextDocIndex];
+      void router.push(`/read/${nextItem.document_id}?play`);
     }
   };
 
   const onTrackChange = (index: number) => {
-    setCurrentTrackIndex(index);
+    if (index >= 0 && index < tracks.length) {
+      setCurrentTrackIndex(index);
+    }
   };
 
   return {

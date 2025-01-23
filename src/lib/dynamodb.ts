@@ -1,6 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { 
+  DynamoDBDocumentClient,
   PutCommand, 
   GetCommand, 
   QueryCommand,
@@ -13,15 +13,37 @@ const REGION = getOrThrowEnvironmentVariable("AWS_REGION");
 const ACCESS_KEY_ID = getOrThrowEnvironmentVariable("AWS_ACCESS_KEY_ID");
 const SECRET_ACCESS_KEY = getOrThrowEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
 
-const client = new DynamoDBClient({
-  region: process.env.AWS_REGION || "us-east-1",
+const clientConfig = {
+  region: REGION,
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    accessKeyId: ACCESS_KEY_ID,
+    secretAccessKey: SECRET_ACCESS_KEY,
   },
-});
+};
 
-export const dynamoDb = DynamoDBDocumentClient.from(client);
+const client = new DynamoDBClient(clientConfig);
+
+const documentClientConfig = {
+  marshallOptions: {
+    removeUndefinedValues: true,
+    convertEmptyValues: true,
+  },
+} as const;
+
+export const dynamoDb = DynamoDBDocumentClient.from(client, documentClientConfig);
+
+export type {
+  PutCommandInput,
+  GetCommandInput,
+  QueryCommandInput,
+  DeleteCommandInput,
+  UpdateCommandInput,
+  PutCommandOutput,
+  GetCommandOutput,
+  QueryCommandOutput,
+  DeleteCommandOutput,
+  UpdateCommandOutput,
+} from "@aws-sdk/lib-dynamodb";
 
 export {
   PutCommand,

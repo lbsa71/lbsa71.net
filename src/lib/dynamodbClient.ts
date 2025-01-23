@@ -1,5 +1,5 @@
 // lib/dynamodbClient.ts
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, DynamoDBClientConfig } from "@aws-sdk/client-dynamodb";
 import { getOrThrowEnvironmentVariable } from "./throwUtils";
 
 // Assert environment variables are defined or provide default values
@@ -9,10 +9,12 @@ const SECRET_ACCESS_KEY = getOrThrowEnvironmentVariable(
   "AWS_SECRET_ACCESS_KEY"
 );
 
-export const dynamoDBClient = new DynamoDBClient({
+const clientConfig: DynamoDBClientConfig = {
   region: REGION,
   credentials: {
     accessKeyId: ACCESS_KEY_ID,
     secretAccessKey: SECRET_ACCESS_KEY,
   },
-});
+} as const;
+
+export const dynamoDBClient = new DynamoDBClient(clientConfig);

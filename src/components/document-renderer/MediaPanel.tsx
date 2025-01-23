@@ -3,9 +3,9 @@ import styles from "../../styles/content-document.module.css";
 import MediaItem from "../MediaItem";
 import { Slideshow } from "../Slideshow";
 import { ContentDocument } from "../../lib/getSite";
-import { TrackInfo } from "../document-renderer/types";
+import { TrackInfo, ImageInfo } from "./types";
 
-interface MediaPanelProps {
+type MediaPanelProps = {
   hero_img?: string;
   media_item?: string;
   media_url: string;
@@ -16,9 +16,12 @@ interface MediaPanelProps {
   tracks: TrackInfo[];
   onAudioEnd: () => void;
   onTrackChange: (index: number) => void;
-}
+};
 
-export const MediaPanel: React.FC<MediaPanelProps> = ({
+const hasImages = (track: TrackInfo | null): track is TrackInfo & { images: ImageInfo[] } => 
+  Boolean(track?.images && track.images.length > 0);
+
+export const MediaPanel = ({
   hero_img,
   media_item,
   media_url,
@@ -29,12 +32,15 @@ export const MediaPanel: React.FC<MediaPanelProps> = ({
   tracks,
   onAudioEnd,
   onTrackChange,
-}) => {
-  const hero_href = hero_img && hero_img.startsWith("http") ? hero_img : `${media_url}/${hero_img}`;
+}: MediaPanelProps) => {
+  const hero_href = hero_img?.startsWith("http") 
+    ? hero_img 
+    : hero_img ? `${media_url}/${hero_img}` 
+    : undefined;
 
   return (
     <div className={styles["media-panel"]}>
-      {hero_img && (
+      {hero_href && (
         <MediaItem
           media_url={media_url}
           href={hero_href}
@@ -47,13 +53,13 @@ export const MediaPanel: React.FC<MediaPanelProps> = ({
             media_url={media_url}
             href={media_item}
             onEnded={onAudioEnd}
-            play={!!play}
+            play={Boolean(play)}
             trackData={tracks}
             onTrackChange={onTrackChange}
           />
         </div>
       )}
-      {currentTrack?.images && currentTrack.images.length > 0 && (
+      {hasImages(currentTrack) && (
         <div className={styles["slideshow-container"]}>
           <Slideshow 
             images={currentTrack.images}
@@ -61,19 +67,21 @@ export const MediaPanel: React.FC<MediaPanelProps> = ({
           />
         </div>
       )}
-      {playlist && (
-        <div className={styles["playlist"]}>
-          {playListItems.map((item) => (
-            <ul key={item.document_id}>
-              <a
-                href={`/read/${item.document_id}`}
-                className={styles["playlist-item"]}
-              >
-                {item.title}
-              </a>
-            </ul>
-          ))}
-        </div>
+      {playlist && playListItems.length > 0 && (
+        <nav className={styles["playlist"]}>
+          <ul>
+            {playListItems.map((item) => (
+              <li key={item.document_id}>
+                <a
+                  href={`/read/${item.document_id}`}
+                  className={styles["playlist-item"]}
+                >
+                  {item.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       )}
     </div>
   );

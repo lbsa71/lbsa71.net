@@ -5,6 +5,11 @@ export type Config = {
   sites: SiteConfig[];
 };
 
+export type Redirect = {
+  destination: string;
+  permanent: boolean;
+};
+
 export type Site = {
   title: string;
   user_id: string;
@@ -17,26 +22,20 @@ export type Site = {
   media_url: string;
   byline: string;
   banner?: string;
-  redirect?: {
-    destination: string;
-    permanent: boolean;
-  };
+  redirect?: Redirect;
 };
 
-type SiteConfig = Partial<Site> & {
+type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'admin_user_id'>> & {
   user_id: string;
   urls: string[];
   admin_user_id: string;
 };
 
-const wrap = (
-  site: SiteConfig
-): Site => {
-
+const wrap = (site: SiteConfig): Site => {
   const media_folder = site.media_folder ?? site.user_id;
   const media_url = `https://media.lbsa71.net/${media_folder}`;
   const title = site.title ?? site.user_id;
-  const byline = "";
+  const byline = site.byline ?? "";
 
   return {
     theme: "default",
@@ -60,35 +59,46 @@ export type ContentDocument = {
   user_id: string;
 };
 
-export type ReqContext = {
-  req: any;
+export type RequestHeaders = {
+  host?: string;
+  'x-forwarded-host'?: string;
 };
 
-export function findSiteByContext(config: Config, context: ReqContext) {
+export type ReqContext = {
+  req: {
+    headers: RequestHeaders;
+  };
+};
+
+export function findSiteByContext(config: Config, context: ReqContext): Site {
   const { req } = context;
-  const host = req.headers.host; // Direct host access
-  const forwardedHost = req.headers["x-forwarded-host"]; // If behind a proxy
+  const host = req.headers.host;
+  const forwardedHost = req.headers['x-forwarded-host'];
 
   const domain = forwardedHost || host;
+  
+  if (!domain) {
+    throw new Error('No domain found in request headers');
+  }
 
   return findSiteByDomain(config, domain);
 }
 
-export function findSiteByDomain(config: Config, domain: string) {
+export function findSiteByDomain(config: Config, domain: string): Site {
   const site = config.sites.find((site) => site.urls.includes(domain));
 
   if (!site) {
-    throw new Error(`Site ${domain}` + " config not found");
+    throw new Error(`Site configuration not found for domain: ${domain}`);
   }
 
   return wrap(site);
 }
 
-export function findSiteByUserId(config: Config, user_id: string) {
+export function findSiteByUserId(config: Config, user_id: string): Site {
   const site = config.sites.find((site) => site.user_id === user_id);
 
   if (!site) {
-    throw new Error(`User ${user_id}` + " config not found");
+    throw new Error(`Site configuration not found for user: ${user_id}`);
   }
 
   return wrap(site);

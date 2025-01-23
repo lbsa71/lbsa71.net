@@ -1,56 +1,59 @@
-interface BaseNode {
-  type: string;
-}
+type NodeType = 'text' | 'header' | 'paragraph' | 'link' | 'track_info' | 'image';
 
-interface TextNode extends BaseNode {
+type BaseNode = {
+  type: NodeType;
+};
+
+type TextNode = BaseNode & {
   type: 'text';
   value: string;
-}
+};
 
-interface HeaderNode extends BaseNode {
+type HeaderNode = BaseNode & {
   type: 'header';
-  level: number;
-  children: Node[];
-}
+  level: 1 | 2 | 3 | 4 | 5 | 6;
+  children: InlineNode[];
+};
 
-interface ParagraphNode extends BaseNode {
+type ParagraphNode = BaseNode & {
   type: 'paragraph';
-  children: Node[];
+  children: InlineNode[];
   position?: number;
   hasTrack?: boolean;
-}
+};
 
-interface LinkNode extends BaseNode {
+type LinkNode = BaseNode & {
   type: 'link';
   url: string;
-  children: Node[];
-}
+  children: TextNode[];
+};
 
-interface ImageNode extends BaseNode {
+type ImageNode = BaseNode & {
   type: 'image';
-  src: string;  // Changed from url to src to match Slideshow interface
+  src: string;
   alt: string;
   position?: number;
-}
+};
 
-interface TrackInfoNode extends BaseNode {
+type TrackInfoNode = BaseNode & {
   type: 'track_info';
   title: string;
   artist: string;
   album?: string;
   position: number;
   images?: ImageNode[];
-}
+};
 
 export type Node = TextNode | HeaderNode | ParagraphNode | LinkNode | TrackInfoNode | ImageNode;
+type InlineNode = TextNode | LinkNode;
 
-interface ParsedDocument {
+type ParsedDocument = {
   nodes: Node[];
   tracks: TrackInfoNode[];
-}
+};
 
-function parseInlineContent(text: string): (TextNode | LinkNode)[] {
-  const nodes: (TextNode | LinkNode)[] = [];
+function parseInlineContent(text: string): InlineNode[] {
+  const nodes: InlineNode[] = [];
   let currentText = '';
   let position = 0;
 
@@ -58,12 +61,10 @@ function parseInlineContent(text: string): (TextNode | LinkNode)[] {
     const linkStart = text.indexOf('[', position);
     
     if (linkStart === -1) {
-      // No more links, add remaining text
       currentText += text.slice(position);
       break;
     }
 
-    // Add text before the link
     if (linkStart > position) {
       currentText += text.slice(position, linkStart);
     }
@@ -87,7 +88,6 @@ function parseInlineContent(text: string): (TextNode | LinkNode)[] {
       break;
     }
 
-    // Add accumulated text if any
     if (currentText) {
       nodes.push({
         type: 'text',
@@ -96,7 +96,6 @@ function parseInlineContent(text: string): (TextNode | LinkNode)[] {
       currentText = '';
     }
 
-    // Add the link
     nodes.push({
       type: 'link',
       url: text.slice(linkUrlStart + 1, linkUrlEnd),
@@ -109,7 +108,6 @@ function parseInlineContent(text: string): (TextNode | LinkNode)[] {
     position = linkUrlEnd + 1;
   }
 
-  // Add any remaining text
   if (currentText) {
     nodes.push({
       type: 'text',
@@ -147,31 +145,33 @@ export function parseMarkdown(markdown: string): ParsedDocument {
 
   function parseTrackInfo(text: string): TrackInfoNode | null {
     const match = text.match(/^(.+?)(?:\s*-\s*(.+?))?(?:\s*\((.+?)\))?\s*\[(\d+)\]$/);
-    if (match) {
-      const [, title, artist = "", album = "", position] = match;
-      return {
-        type: 'track_info',
-        title: title.trim(),
-        artist: artist.trim(),
-        album: album.trim() || undefined,
-        position: parseInt(position, 10),
-        images: []
-      };
-    }
-    return null;
+    if (!match) return null;
+
+    const [, title, artist = "", album = "", positionStr] = match;
+    const position = parseInt(positionStr, 10);
+    if (isNaN(position)) return null;
+
+    return {
+      type: 'track_info',
+      title: title.trim(),
+      artist: artist.trim(),
+      album: album.trim() || undefined,
+      position,
+      images: []
+    };
   }
 
   function parseImage(text: string): ImageNode | null {
     const match = text.match(/!\[([^\]]*)\]\(([^)]+)\)/);
-    if (match) {
-      return {
-        type: 'image',
-        src: match[2],  // Changed from url to src
-        alt: match[1],
-        position: currentTrack?.position
-      };
-    }
-    return null;
+    if (!match) return null;
+
+    const [, alt, src] = match;
+    return {
+      type: 'image',
+      src,
+      alt,
+      position: currentTrack?.position
+    };
   }
 
   for (const line of lines) {
@@ -187,7 +187,9 @@ export function parseMarkdown(markdown: string): ParsedDocument {
       const headerMatch = trimmedLine.match(/^(#+)/);
       if (!headerMatch) continue;
       
-      const level = headerMatch[0].length;
+      const level = headerMatch[0].length as HeaderNode['level'];
+      if (level < 1 || level > 6) continue;
+
       const content = trimmedLine.slice(level).trim();
       
       if (level === 4) {

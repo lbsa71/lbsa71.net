@@ -1,13 +1,19 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useAudio } from '../context/AudioContext';
 import styles from '../styles/AudioPlayer.module.css';
 import { FaPlay, FaPause, FaVolumeMute, FaVolumeUp, FaStepBackward, FaStepForward } from 'react-icons/fa';
 
-interface AudioPlayerProps {
+type AudioPlayerProps = {
   onTrackChange?: (index: number) => void;
-}
+};
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
+const formatTime = (time: number): string => {
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
+
+const AudioPlayer = ({ onTrackChange }: AudioPlayerProps) => {
   const {
     isPlaying,
     currentTime,
@@ -21,31 +27,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
     toggleMute,
   } = useAudio();
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const getCurrentCuePointIndex = () => {
-    // Find the last cue point that's less than or equal to the current time
-    const index = cuePoints.reduce((lastIndex, point, currentIndex) => {
-      if (point <= currentTime) {
-        return currentIndex;
-      }
-      return lastIndex;
-    }, 0);
-    return index;
+  const getCurrentCuePointIndex = (): number => {
+    return cuePoints.reduce((lastIndex, point, currentIndex) => 
+      point <= currentTime ? currentIndex : lastIndex, 0);
   };
 
   const handlePrev = () => {
     const currentIndex = getCurrentCuePointIndex();
     if (currentIndex > 0) {
       seek(cuePoints[currentIndex - 1]);
-      onTrackChange && onTrackChange(currentIndex - 1);
+      onTrackChange?.(currentIndex - 1);
     } else {
       seek(0);
-      onTrackChange && onTrackChange(0);
+      onTrackChange?.(0);
     }
   };
 
@@ -53,20 +47,35 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
     const currentIndex = getCurrentCuePointIndex();
     if (currentIndex < cuePoints.length - 1) {
       seek(cuePoints[currentIndex + 1]);
-      onTrackChange && onTrackChange(currentIndex + 1);
+      onTrackChange?.(currentIndex + 1);
     } else if (duration > 0) {
       seek(duration);
     }
   };
 
+  const handleSeek = (value: string) => {
+    const newTime = parseFloat(value);
+    if (!isNaN(newTime)) {
+      seek(newTime);
+      const newIndex = getCurrentCuePointIndex();
+      onTrackChange?.(newIndex);
+    }
+  };
+
+  const handleVolumeChange = (value: string) => {
+    const newVolume = parseFloat(value);
+    if (!isNaN(newVolume) && newVolume >= 0 && newVolume <= 1) {
+      setVolume(newVolume);
+    }
+  };
+
   useEffect(() => {
     const currentIndex = getCurrentCuePointIndex();
-    onTrackChange && onTrackChange(currentIndex);
+    onTrackChange?.(currentIndex);
   }, [currentTime, cuePoints, onTrackChange]);
 
   const isFirstCuePoint = currentTime === 0 || (cuePoints.length > 0 && currentTime <= cuePoints[0]);
   const isLastCuePoint = cuePoints.length > 0 && currentTime >= cuePoints[cuePoints.length - 1];
-
   const validCuePoints = cuePoints.length > 0 && cuePoints.every(point => point >= 0 && point <= duration);
 
   return (
@@ -82,7 +91,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
             <FaStepBackward />
           </button>
         )}
-        <button onClick={togglePlay} className={styles.playPauseButton} aria-label={isPlaying ? "Pause" : "Play"}>
+        <button 
+          onClick={togglePlay} 
+          className={styles.playPauseButton} 
+          aria-label={isPlaying ? "Pause" : "Play"}
+        >
           {isPlaying ? <FaPause /> : <FaPlay />}
         </button>
         {validCuePoints && (
@@ -100,12 +113,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
           min={0}
           max={duration}
           value={currentTime}
-          onChange={(e) => {
-            const newTime = parseFloat(e.target.value);
-            seek(newTime);
-            const newIndex = getCurrentCuePointIndex();
-            onTrackChange && onTrackChange(newIndex);
-          }}
+          onChange={(e) => handleSeek(e.target.value)}
           className={styles.seekBar}
           aria-label="Seek"
         />
@@ -113,7 +121,11 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
           {formatTime(currentTime)} / {formatTime(duration)}
         </div>
         <div className={styles.volumeControl}>
-          <button onClick={toggleMute} className={styles.muteButton} aria-label={isMuted ? "Unmute" : "Mute"}>
+          <button 
+            onClick={toggleMute} 
+            className={styles.muteButton} 
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
             {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
           </button>
           <input
@@ -122,7 +134,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ onTrackChange }) => {
             max={1}
             step={0.1}
             value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            onChange={(e) => handleVolumeChange(e.target.value)}
             className={styles.volumeSlider}
             aria-label="Volume"
           />

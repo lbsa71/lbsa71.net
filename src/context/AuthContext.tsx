@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 type User = {
     id: string;
@@ -16,36 +16,60 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <GoogleOAuthProvider clientId="1056104670088-ci05aih7o27hp9aj22ppipmh6n7a2174.apps.googleusercontent.com">
+type ProviderProps = {
+    children: ReactNode;
+};
+
+const GOOGLE_CLIENT_ID = '1056104670088-ci05aih7o27hp9aj22ppipmh6n7a2174.apps.googleusercontent.com';
+
+export const AuthProvider = ({ children }: ProviderProps) => (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <AuthProviderInternal>{children}</AuthProviderInternal>
     </GoogleOAuthProvider>
 );
 
-const AuthProviderInternal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
+const AuthProviderInternal = ({ children }: ProviderProps) => {
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const savedUser = localStorage.getItem('user');
+        return savedUser ? JSON.parse(savedUser) : null;
+    });
 
-    const login = (user: User) => {
-        setUser(user);
+    const login = (newUser: User) => {
+        setUser(newUser);
+        localStorage.setItem('user', JSON.stringify(newUser));
     };
 
     const logout = () => {
         setUser(null);
-        // Perform any additional logout operations
+        localStorage.removeItem('user');
     };
 
     useEffect(() => {
-        // Check if user is already logged in and set the user state
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'user') {
+                setUser(e.newValue ? JSON.parse(e.newValue) : null);
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
+    const value: AuthContextType = {
+        user,
+        login,
+        logout,
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider');

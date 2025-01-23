@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useRef, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useRef, useState, useCallback, useEffect, ReactNode } from 'react';
 
-interface AudioContextType {
+type AudioContextType = {
   audioRef: React.RefObject<HTMLAudioElement>;
   isPlaying: boolean;
   currentTime: number;
@@ -16,11 +16,16 @@ interface AudioContextType {
   toggleMute: () => void;
   setAudioSrc: (src: string) => void;
   setCuePoints: (points: number[]) => void;
-}
+};
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
 
-export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> = ({ children, src }) => {
+type AudioProviderProps = {
+  children: ReactNode;
+  src?: string;
+};
+
+export const AudioProvider = ({ children, src }: AudioProviderProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -46,7 +51,7 @@ export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> 
   }, [setAudioSrc, src]);
 
   const play = useCallback(() => {
-    audioRef.current?.play();
+    void audioRef.current?.play();
     setIsPlaying(true);
   }, []);
 
@@ -71,7 +76,7 @@ export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> 
   }, []);
 
   const setAudioVolume = useCallback((newVolume: number) => {
-    if (audioRef.current) {
+    if (audioRef.current && newVolume >= 0 && newVolume <= 1) {
       audioRef.current.volume = newVolume;
       setVolume(newVolume);
     }
@@ -85,7 +90,9 @@ export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> 
   }, [isMuted]);
 
   const setCuePointsCallback = useCallback((points: number[]) => {
-    setCuePoints(points);
+    if (points.every(point => point >= 0 && isFinite(point))) {
+      setCuePoints(points);
+    }
   }, []);
 
   useEffect(() => {
@@ -93,19 +100,16 @@ export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> 
     if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleDurationChange = () => {
-      setDuration(audio.duration);
-    };
+    const handleDurationChange = () => setDuration(audio.duration);
     const handleEnded = () => setIsPlaying(false);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
 
-    // Add a more frequent update for currentTime
     const updateInterval = setInterval(() => {
       setCurrentTime(audio.currentTime);
-    }, 100); // Update every 100ms
+    }, 100);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
@@ -115,7 +119,7 @@ export const AudioProvider: React.FC<React.PropsWithChildren<{ src?: string }>> 
     };
   }, []);
 
-  const value = {
+  const value: AudioContextType = {
     audioRef,
     isPlaying,
     currentTime,

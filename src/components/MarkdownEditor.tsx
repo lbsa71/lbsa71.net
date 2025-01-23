@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, use, useEffect } from "react";
+import { Dispatch, SetStateAction } from "react";
 import axios from "axios";
 import { MarkdownSyntaxHelp } from "./MarkdownSyntaxHelp";
 import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
@@ -11,14 +11,31 @@ type MarkdownEditorProps = {
   setDocument: Dispatch<SetStateAction<ContentDocument>>;
 };
 
-const MarkdownRenderer = (
-  handleSave: () => Promise<void>,
-  handleDelete: () => Promise<void>,
-  document: ContentDocument,
-  site: Site,
-  setDocument: React.Dispatch<React.SetStateAction<ContentDocument>>
-) => {
+type MarkdownRendererProps = {
+  handleSave: () => Promise<void>;
+  handleDelete: () => Promise<void>;
+  document: ContentDocument;
+  site: Site;
+  setDocument: Dispatch<SetStateAction<ContentDocument>>;
+};
+
+const MarkdownRenderer = ({
+  handleSave,
+  handleDelete,
+  document,
+  site,
+  setDocument,
+}: MarkdownRendererProps) => {
   const isEditMode = document.user_id && document.document_id;
+
+  const handleInputChange = (field: keyof ContentDocument) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setDocument(prev => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
 
   return (
     <div
@@ -37,12 +54,7 @@ const MarkdownRenderer = (
             type="text"
             placeholder="User ID"
             value={document.user_id}
-            onChange={(e) =>
-              setDocument({
-                ...document,
-                user_id: e.target.value,
-              })
-            }
+            onChange={handleInputChange("user_id")}
             style={{
               marginRight: "10px",
               padding: "10px",
@@ -53,79 +65,47 @@ const MarkdownRenderer = (
             type="text"
             placeholder="Document ID (leave blank to create)"
             value={document.document_id}
-            onChange={(e) =>
-              setDocument({
-                ...document,
-                document_id: e.target.value,
-              })
-            }
+            onChange={handleInputChange("document_id")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Hero image URL"
             value={document.hero_img}
-            onChange={(e) => {
-              setDocument({
-                ...document,
-                hero_img: e.target.value,
-              });
-            }}
+            onChange={handleInputChange("hero_img")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Media Item URL"
             value={document.media_item}
-            onChange={(e) => {
-              setDocument({
-                ...document,
-                media_item: e.target.value,
-              });
-            }}
+            onChange={handleInputChange("media_item")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Playlist"
             value={document.playlist}
-            onChange={(e) => {
-              setDocument({
-                ...document,
-                playlist: e.target.value,
-              });
-            }}
+            onChange={handleInputChange("playlist")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Ordinal"
             value={document.ordinal}
-            onChange={(e) => {
-              setDocument({
-                ...document,
-                ordinal: e.target.value,
-              });
-            }}
+            onChange={handleInputChange("ordinal")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
         </div>
 
-        {/* Textarea and MarkdownSyntaxHelp */}
         <textarea
           placeholder="Enter markdown"
           value={document.content}
-          onChange={(e) =>
-            setDocument({
-              ...document,
-              content: e.target.value,
-            })
-          }
-          style={{ flex: 1, padding: "10px", minHeight: "300px" }} // Adjust the height as needed
+          onChange={handleInputChange("content")}
+          style={{ flex: 1, padding: "10px", minHeight: "300px" }}
         />
         <MarkdownSyntaxHelp />
 
-        {/* Save and Delete buttons */}
         <div style={{ marginTop: "10px" }}>
           <button
             onClick={handleSave}
@@ -166,25 +146,17 @@ export const MarkdownEditor = ({
 }: MarkdownEditorProps) => {
   const { user_id, document_id } = document;
 
-
-  const isEditMode = user_id && document_id;
-
-  if (!user_id)
-    return null;
+  if (!user_id) return null;
 
   const site = findSiteByUserId(_config, user_id);
+  const isEditMode = user_id && document_id;
 
   const handleSave = async () => {
     const endpoint = isEditMode ? "/api/update" : "/api/create";
-    const payload = document;
 
     try {
-      const result = await axios.post(endpoint, payload);
-
-      const data = result.data;
-
-      const refetchedDocument = { ...document, ...data };
-      setDocument(refetchedDocument);
+      const { data } = await axios.post<Partial<ContentDocument>>(endpoint, document);
+      setDocument(prev => ({ ...prev, ...data }));
     } catch (error) {
       console.error("Failed to save document", error);
     }
@@ -204,12 +176,14 @@ export const MarkdownEditor = ({
     }
   };
 
-  return MarkdownRenderer(
-    handleSave,
-    handleDelete,
-    document,
-    site,
-    setDocument
+  return (
+    <MarkdownRenderer
+      handleSave={handleSave}
+      handleDelete={handleDelete}
+      document={document}
+      site={site}
+      setDocument={setDocument}
+    />
   );
 };
 

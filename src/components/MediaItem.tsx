@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, HTMLAttributes } from "react";
 import { AudioProvider, useAudio } from "../context/AudioContext";
 import AudioPlayer from "./AudioPlayer";
 import styles from "../styles/AudioPlayer.module.css";
 
-interface TrackInfo {
+type TrackInfo = {
   title: string;
   artist: string;
   album?: string;
   position: number;
-}
+};
 
-type MediaItemProps = React.HTMLAttributes<HTMLDivElement> & {
+type MediaItemProps = HTMLAttributes<HTMLDivElement> & {
   media_url: string;
   href: string;
   onEnded?: () => void;
@@ -19,30 +19,39 @@ type MediaItemProps = React.HTMLAttributes<HTMLDivElement> & {
   onTrackChange?: (index: number) => void;
 };
 
-const TrackDisplay: React.FC<{ trackData: TrackInfo[] }> = ({ trackData }) => {
+type EmbedProps = {
+  href: string;
+};
+
+const TrackDisplay = ({ trackData }: { trackData: TrackInfo[] }) => {
   const { currentTime, setCuePoints } = useAudio();
   const [currentTrack, setCurrentTrack] = useState<TrackInfo | null>(null);
 
   useEffect(() => {
-    if (Array.isArray(trackData) && trackData.length > 0) {
-      const cuePoints = trackData
-        .map(track => track.position)
-        .filter(time => typeof time === 'number' && !isNaN(time) && time >= 0);
-
-      if (cuePoints.length > 0) {
-        setCuePoints(cuePoints);
-      } else {
-        console.warn('TrackDisplay - No valid cue points generated from trackData');
-      }
-    } else {
+    if (!Array.isArray(trackData) || trackData.length === 0) {
       console.warn('TrackDisplay - Invalid or empty trackData received');
+      return;
+    }
+
+    const cuePoints = trackData
+      .map(track => track.position)
+      .filter((time): time is number => 
+        typeof time === 'number' && !isNaN(time) && time >= 0
+      );
+
+    if (cuePoints.length > 0) {
+      setCuePoints(cuePoints);
+    } else {
+      console.warn('TrackDisplay - No valid cue points generated from trackData');
     }
   }, [trackData, setCuePoints]);
 
   useEffect(() => {
     const newTrack = trackData.find((track, index) =>
-      currentTime >= track.position && (index === trackData.length - 1 || currentTime < trackData[index + 1].position)
+      currentTime >= track.position && 
+      (index === trackData.length - 1 || currentTime < trackData[index + 1].position)
     );
+
     if (newTrack && (!currentTrack || newTrack.title !== currentTrack.title)) {
       setCurrentTrack(newTrack);
     }
@@ -57,7 +66,7 @@ const TrackDisplay: React.FC<{ trackData: TrackInfo[] }> = ({ trackData }) => {
   );
 };
 
-const SpotifyEmbed: React.FC<{ href: string }> = ({ href }) => {
+const SpotifyEmbed = ({ href }: EmbedProps) => {
   const embedUrl = href.startsWith("https://open.spotify.com/embed")
     ? href
     : `https://open.spotify.com/embed/artist/${href.split("/").pop()}`;
@@ -75,7 +84,7 @@ const SpotifyEmbed: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const YoutubeEmbed: React.FC<{ href: string }> = ({ href }) => {
+const YoutubeEmbed = ({ href }: EmbedProps) => {
   const embedUrl = href.startsWith("https://www.youtube.com/watch")
     ? `https://www.youtube.com/embed/${new URL(href).searchParams.get("v")}`
     : href;
@@ -93,7 +102,7 @@ const YoutubeEmbed: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const MediaItem: React.FC<MediaItemProps> = ({
+const MediaItem = ({
   children,
   media_url,
   href,
@@ -103,7 +112,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
   onTrackChange,
   className,
   ...props
-}) => {
+}: MediaItemProps) => {
   if (typeof href !== "string") return null;
 
   if (href.startsWith("https://www.youtube.com")) {
@@ -122,7 +131,7 @@ const MediaItem: React.FC<MediaItemProps> = ({
     return (
       <AudioProvider src={fullHref}>
         <div className={className}>
-          {trackData ? <TrackDisplay trackData={trackData} /> : null}
+          {trackData && <TrackDisplay trackData={trackData} />}
           <AudioPlayer onTrackChange={onTrackChange} />
         </div>
       </AudioProvider>

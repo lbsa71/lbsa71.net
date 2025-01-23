@@ -1,6 +1,7 @@
 // pages/_app.tsx
 import React, { useState } from "react";
 import { AppProps } from "next/app";
+import type { NextPage, NextPageContext } from 'next/types';
 import GlobalLayout from "../components/GlobalLayout";
 import { Config, findSiteByDomain, Site } from "../lib/getSite";
 import { AudioProvider } from "../context/AudioContext";
@@ -17,7 +18,38 @@ export type User = {
   sub: string;
 };
 
-function MyApp({ Component, pageProps }: AppProps & { site: Site; config: Config }) {
+type AppPropsWithSite = AppProps & {
+  pageProps: {
+    site: Site;
+    config: Config;
+    [key: string]: unknown;
+  };
+};
+
+type GetInitialPropsResult = {
+  pageProps: {
+    site: Site;
+    _config: Config;
+    [key: string]: unknown;
+  };
+};
+
+type NextPageWithGetInitialProps = NextPage & {
+  getInitialProps?: (ctx: NextPageContext) => Promise<{ pageProps: Record<string, unknown> }>;
+};
+
+type GetInitialPropsContext = {
+  Component: NextPageWithGetInitialProps;
+  ctx: NextPageContext & {
+    req?: {
+      headers: {
+        host?: string;
+      };
+    };
+  };
+};
+
+const MyApp = ({ Component, pageProps }: AppPropsWithSite) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -39,12 +71,12 @@ function MyApp({ Component, pageProps }: AppProps & { site: Site; config: Config
       </AudioProvider>
     </AuthProvider>
   );
-}
+};
 
-MyApp.getInitialProps = async (appContext: any) => {
-  const appProps = appContext.Component.getInitialProps
-    ? await appContext.Component.getInitialProps(appContext.ctx)
-    : {};
+MyApp.getInitialProps = async (appContext: GetInitialPropsContext): Promise<GetInitialPropsResult> => {
+  const result = (await appContext.Component.getInitialProps?.(appContext.ctx)) as { pageProps: Record<string, unknown> };
+  const pageProps = result?.pageProps ?? {};
+
   let site: Site;
   let _config: Config;
 
@@ -53,24 +85,30 @@ MyApp.getInitialProps = async (appContext: any) => {
     _config = await getConfig();
 
     const host = appContext.ctx.req.headers.host;
-
     site = await findSiteByDomain(_config, host);
   } else {
     console.log("--- No host header - cannot determine site");
-
     throw new Error("No host header - cannot determine site");
   }
 
-  const pageProps = { ...appProps.pageProps, _config, site };
-
-  return { ...appProps, pageProps };
+  return {
+    pageProps: {
+      ...pageProps,
+      _config,
+      site,
+    },
+  };
 };
 
-const AuthMenu: React.FC = () => {
+type AuthMenuProps = {
+  className?: string;
+};
+
+const AuthMenu = ({ className }: AuthMenuProps) => {
   const { user, login, logout } = useAuth();
 
   return (
-    <div>
+    <div className={className}>
       {user ? (
         <div>
           <p>Welcome, {user.email}</p>
@@ -96,3 +134,4 @@ const AuthMenu: React.FC = () => {
 };
 
 export default MyApp;
+
