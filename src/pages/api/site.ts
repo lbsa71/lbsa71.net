@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { fetchSiteByDomain } from "./lib/dynamodbClient";
+import { fetchSiteByDomain } from "@/lib/dynamodb";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     const host = req.headers.host;

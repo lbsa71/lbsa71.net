@@ -1,6 +1,6 @@
 import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
 import { useAuth } from "@/context/AuthContext";
-import { fetchSiteByContext, fetchSiteByUserId } from "@/pages/api/lib/dynamodbClient";
+import { fetchSiteByContext, fetchSiteByUserId } from "@/lib/dynamodb";
 import axios from "axios";
 import { GetServerSidePropsContext } from "next";
 import { useEffect, useState } from "react";

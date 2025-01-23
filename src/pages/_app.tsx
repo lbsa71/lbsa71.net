@@ -81,7 +81,7 @@ MyApp.getInitialProps = async (appContext: GetInitialPropsContext): Promise<GetI
   let _config: Config;
 
   if (appContext?.ctx?.req?.headers?.host) {
-    const { getConfig } = await import("./api/lib/dynamodbClient");
+    const { getConfig } = await import("@/lib/dynamodb");
     _config = await getConfig();
 
     const host = appContext.ctx.req.headers.host;

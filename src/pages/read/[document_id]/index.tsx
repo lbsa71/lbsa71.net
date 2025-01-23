@@ -4,7 +4,7 @@ import { GetServerSidePropsContext } from "next";
 import { DocumentRenderer } from "@/components/DocumentRenderer";
 import { listDocuments } from "@/pages/api/list";
 import { wrapDocument } from "@/lib/wrapDocument";
-import { fetchSiteByContext } from "@/pages/api/lib/dynamodbClient";
+import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext

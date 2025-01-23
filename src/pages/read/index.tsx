@@ -8,7 +8,7 @@ import { listDocuments } from "../api/list";
 import { safe } from "@/lib/safe";
 import { wrapDocument } from "@/lib/wrapDocument";
 import Script from "next/script";
-import { fetchSiteByContext } from "../api/lib/dynamodbClient";
+import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export async function getServerSideProps(context: ReqContext) {
   const site = await fetchSiteByContext(context);

@@ -1,6 +1,6 @@
 import { GetServerSidePropsContext } from "next";
 import { getDocument } from "./api/read";
-import { fetchSiteByContext } from "./api/lib/dynamodbClient";
+import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
