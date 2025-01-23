@@ -12,7 +12,6 @@ type APIContentDocuments = {
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-
   const { user_id } = context.params || {};
 
   const site = await fetchSiteByUserId(user_id as string);
@@ -24,40 +23,40 @@ const EditList = ({ site }: { site: Site }) => {
   const { user } = useAuth();
 
   const [documents, setDocuments] = useState<ContentDocument[]>();
-  const user_id = site.user_id;
+  const userId = site.userId;
 
   useEffect(() => {
-    if (!user_id) return;
+    if (!userId) return;
 
     axios
-      .get<any, APIContentDocuments>(`/api/list?user_id=${user_id}`)
+      .get<any, APIContentDocuments>(`/api/list?user_id=${userId}`)
       .then((response) => {
         const documents = response.data;
         setDocuments(documents);
       })
       .catch((error) => console.error("Failed to fetch document", error));
-  }, [user_id]);
+  }, [userId]);
 
   console.log("site", JSON.stringify(site, null, 2));
   console.log("user", JSON.stringify(user, null, 2));
 
-  if (typeof user_id !== "string" || !site || !user || user.sub !== site.admin_user_id) {
+  if (typeof userId !== "string" || !site || !user || user.sub !== site.adminUserId) {
     return <div>Unauthorized</div>;
   }
 
   return (
     <>
-      <h1>Documents for {user_id}</h1>
+      <h1>Documents for {userId}</h1>
       <ul>
         {documents &&
           documents.map((doc) => {
-            const title = doc.title ?? doc.document_id;
+            const title = doc.title ?? doc.id;
             return (
-              <li key={doc.document_id}>
-                <a href={`/edit/${doc.user_id}/${doc.document_id}`}>{title}</a>
+              <li key={doc.id}>
+                <a href={`/edit/${doc.userId}/${doc.id}`}>{title}</a>
                 &nbsp;
                 <a
-                  href={`/api/delete?user_id=${doc.user_id}/${doc.document_id}`}
+                  href={`/api/delete?user_id=${doc.userId}/${doc.id}`}
                 >
                   Delete
                 </a>

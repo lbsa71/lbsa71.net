@@ -1,25 +1,30 @@
 // api/delete.ts
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { DeleteCommand, dynamoDb } from "@/lib/dynamodb";
+import { DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { dynamoDb } from "@/lib/dynamodb";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+import { ApiResponse, DeleteDocumentRequest } from "@/types/api";
 
 const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, document_id } = req.body;
+  const { userId, documentId } = req.body as DeleteDocumentRequest;
+
+  if (!userId || !documentId) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  const deleteCommand = new DeleteCommand({
+    TableName: "lbsa71_net",
+    Key: {
+      user_id: userId,
+      document_id: documentId,
+    },
+  });
 
   try {
-    await dynamoDb.send(
-      new DeleteCommand({
-        TableName: "lbsa71_net",
-        Key: {
-          user_id,
-          document_id,
-        },
-      })
-    );
-
-    res.status(200).json({ message: "Post deleted" });
+    await dynamoDb.send(deleteCommand);
+    res.status(200).json({ message: "Document deleted successfully" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to delete post" });
+    res.status(500).json({ error: "Failed to delete document" });
   }
 };
 

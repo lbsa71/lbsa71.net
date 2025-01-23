@@ -1,16 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { fetchSiteByDomain } from "@/lib/dynamodb";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+import { Site } from "@/types/core";
+import { ApiResponse } from "@/types/api";
+import { fetchSiteByContext } from "@/lib/dynamodb";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    const host = req.headers.host;
-    if (!host) {
-        return res.status(400).json({ error: "Host header is missing" });
-    }
+const handler = async (req: VercelRequest, res: VercelResponse) => {
+  try {
+    const site = await fetchSiteByContext({ req: { headers: req.headers } });
+    res.status(200).json({ data: site });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch site configuration" });
+  }
+};
 
-    try {
-        const site = await fetchSiteByDomain(host);
-        return res.status(200).json(site);
-    } catch (error) {
-        return res.status(500).json({ error: "Failed to fetch site configuration" });
-    }
-}
+export default handler;

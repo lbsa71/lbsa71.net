@@ -2,29 +2,28 @@ import React from "react";
 import styles from "../../styles/content-document.module.css";
 import MediaItem from "../MediaItem";
 import { Slideshow } from "../Slideshow";
-import { ContentDocument } from "../../lib/getSite";
-import { TrackInfo, ImageInfo } from "./types";
+import { ContentDocument, TrackNode, MediaItem as MediaItemType } from "../../types/core";
 
 type MediaPanelProps = {
-  hero_img?: string;
-  media_item?: string;
-  media_url: string;
+  heroImage?: string;
+  mediaItem?: string;
+  mediaUrl: string;
   playlist?: string;
-  currentTrack: TrackInfo | null;
+  currentTrack: TrackNode | null;
   playListItems: ContentDocument[];
   play?: boolean;
-  tracks: TrackInfo[];
+  tracks: TrackNode[];
   onAudioEnd: () => void;
   onTrackChange: (index: number) => void;
 };
 
-const hasImages = (track: TrackInfo | null): track is TrackInfo & { images: ImageInfo[] } => 
-  Boolean(track?.images && track.images.length > 0);
+const hasMedia = (track: TrackNode | null): track is TrackNode & { media: MediaItemType[] } => 
+  Boolean(track?.media && track.media.length > 0);
 
 export const MediaPanel = ({
-  hero_img,
-  media_item,
-  media_url,
+  heroImage,
+  mediaItem,
+  mediaUrl,
   playlist,
   currentTrack,
   playListItems,
@@ -33,25 +32,27 @@ export const MediaPanel = ({
   onAudioEnd,
   onTrackChange,
 }: MediaPanelProps) => {
-  const hero_href = hero_img?.startsWith("http") 
-    ? hero_img 
-    : hero_img ? `${media_url}/${hero_img}` 
+  const heroHref = heroImage?.startsWith("http") 
+    ? heroImage 
+    : heroImage ? `${mediaUrl}/${heroImage}` 
     : undefined;
 
   return (
     <div className={styles["media-panel"]}>
-      {hero_href && (
-        <MediaItem
-          media_url={media_url}
-          href={hero_href}
-          className={styles["media-image"]}
-        />
+      {heroHref && (
+        <div className={styles["media-image"]}>
+          <MediaItem
+            href={heroHref}
+            mediaUrl={mediaUrl}
+            className={styles["media-image"]}
+          />
+        </div>
       )}
-      {media_item && (
+      {mediaItem && (
         <div className={styles["media-container"]}>
           <MediaItem
-            media_url={media_url}
-            href={media_item}
+            href={mediaItem}
+            mediaUrl={mediaUrl}
             onEnded={onAudioEnd}
             play={Boolean(play)}
             trackData={tracks}
@@ -59,11 +60,11 @@ export const MediaPanel = ({
           />
         </div>
       )}
-      {hasImages(currentTrack) && (
+      {hasMedia(currentTrack) && (
         <div className={styles["slideshow-container"]}>
           <Slideshow 
-            images={currentTrack.images}
-            media_url={media_url}
+            images={currentTrack.media}
+            mediaUrl={mediaUrl}
           />
         </div>
       )}
@@ -71,9 +72,9 @@ export const MediaPanel = ({
         <nav className={styles["playlist"]}>
           <ul>
             {playListItems.map((item) => (
-              <li key={item.document_id}>
+              <li key={item.id}>
                 <a
-                  href={`/read/${item.document_id}`}
+                  href={`/read/${item.id}`}
                   className={styles["playlist-item"]}
                 >
                   {item.title}

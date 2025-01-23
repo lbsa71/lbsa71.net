@@ -1,82 +1,59 @@
 import { useState, useEffect } from 'react';
 import { parseMarkdown } from '../../lib/markdownParser';
-import { TrackInfo } from './types';
 import { useRouter } from 'next/router';
-import { ContentDocument } from '../../lib/getSite';
+import { ContentDocument, TrackNode } from '../../types/core';
 
 type UseTrackManagementProps = {
   content: string;
-  document_id: string;
+  documentId: string;
   playListItems: ContentDocument[];
   duration: number;
   currentTime: number;
 };
 
 type UseTrackManagementResult = {
-  tracks: TrackInfo[];
+  tracks: TrackNode[];
   currentTrackIndex: number;
-  currentTrack: TrackInfo | null;
+  currentTrack: TrackNode | null;
   onAudioEnd: () => void;
   onTrackChange: (index: number) => void;
 };
 
 export const useTrackManagement = ({
   content,
-  document_id,
+  documentId,
   playListItems,
   duration,
   currentTime,
 }: UseTrackManagementProps): UseTrackManagementResult => {
   const router = useRouter();
-  const [tracks, setTracks] = useState<TrackInfo[]>([]);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(-1);
+  const { tracks } = parseMarkdown(content);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
   useEffect(() => {
-    const { tracks: parsedTracks } = parseMarkdown(content);
-    const newTracks = parsedTracks.map(track => ({
-      title: track.title,
-      artist: track.artist,
-      album: track.album,
-      position: track.position,
-      images: track.images?.map(img => ({
-        src: img.src,
-        alt: img.alt
-      }))
-    }));
-    setTracks(newTracks);
-  }, [content]);
-
-  useEffect(() => {
-    if (tracks.length === 0 || duration <= 0) return;
-
-    const newIndex = tracks.reduce((lastIndex, track, currentIndex) => 
-      track.position <= currentTime ? currentIndex : lastIndex, 0);
-
-    if (newIndex !== currentTrackIndex) {
-      setCurrentTrackIndex(newIndex);
+    const track = parseInt(router.query.track as string);
+    if (!isNaN(track) && track >= 0 && track < tracks.length) {
+      setCurrentTrackIndex(track);
     }
-  }, [currentTime, duration, tracks, currentTrackIndex]);
+  }, [router.query.track, tracks.length]);
 
   const onAudioEnd = () => {
-    const nextIndex = currentTrackIndex + 1;
-    if (nextIndex < tracks.length) {
-      setCurrentTrackIndex(nextIndex);
-      return;
-    }
-
-    const currentDocIndex = playListItems.findIndex(
-      (item) => item.document_id === document_id
-    );
-    const nextDocIndex = currentDocIndex + 1;
-
-    if (nextDocIndex < playListItems.length) {
-      const nextItem = playListItems[nextDocIndex];
-      void router.push(`/read/${nextItem.document_id}?play`);
+    if (currentTrackIndex < tracks.length - 1) {
+      const nextTrack = currentTrackIndex + 1;
+      router.push({
+        pathname: router.pathname,
+        query: { ...router.query, track: nextTrack },
+      });
+      setCurrentTrackIndex(nextTrack);
     }
   };
 
   const onTrackChange = (index: number) => {
     if (index >= 0 && index < tracks.length) {
+      router.push({
+        pathname: router.pathname,
+        query: { ...router.query, track: index },
+      });
       setCurrentTrackIndex(index);
     }
   };
@@ -84,7 +61,7 @@ export const useTrackManagement = ({
   return {
     tracks,
     currentTrackIndex,
-    currentTrack: currentTrackIndex >= 0 ? tracks[currentTrackIndex] : null,
+    currentTrack: tracks[currentTrackIndex] || null,
     onAudioEnd,
     onTrackChange,
   };

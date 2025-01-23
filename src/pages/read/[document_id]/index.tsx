@@ -1,5 +1,5 @@
 import React from "react";
-import { ContentDocument, Site } from "@/lib/getSite";
+import { ContentDocument, Site } from "@/types/core";
 import { GetServerSidePropsContext } from "next";
 import { DocumentRenderer } from "@/components/DocumentRenderer";
 import { listDocuments } from "@/pages/api/list";
@@ -11,16 +11,16 @@ export const getServerSideProps = async (
 ) => {
   const site = await fetchSiteByContext(context);
 
-  const { user_id } = site;
-  const document_id = context.params?.document_id;
+  const { userId } = site;
+  const documentId = context.params?.document_id;
 
-  if (typeof user_id !== "string" || typeof document_id !== "string") {
+  if (typeof userId !== "string" || typeof documentId !== "string") {
     throw new Error("Invalid query");
   }
 
-  const documents = (await listDocuments(user_id))?.map(wrapDocument) ?? [];
+  const documents = (await listDocuments(userId))?.map(wrapDocument) ?? [];
 
-  const document = documents.find((doc) => doc.document_id === document_id);
+  const document = documents.find((doc) => doc.id === documentId);
 
   return { props: { site, document, documents } };
 };

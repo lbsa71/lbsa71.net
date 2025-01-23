@@ -19,6 +19,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { getOrThrowEnvironmentVariable } from "./throwUtils";
 import { Config, findSiteByContext, findSiteByDomain, findSiteByUserId, type ReqContext } from "./getSite";
+import { localConfig } from "./localConfig";
 
 // Environment variables
 const REGION = getOrThrowEnvironmentVariable("AWS_REGION");
@@ -73,6 +74,11 @@ export {
 
 // Site Configuration Operations
 export const getConfig = async (): Promise<Config> => {
+  // Use local config in development
+  if (process.env.NODE_ENV === "development") {
+    return localConfig;
+  }
+
   const queryCommand = new QueryCommand({
     TableName: SITE_CONFIG_TABLE,
     KeyConditionExpression: "user_id = :uid and document_id = :did",

@@ -1,83 +1,76 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { UpdateCommand, PutCommand, dynamoDb } from "@/lib/dynamodb";
-import { jwtDecode } from "jwt-decode";
+import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { dynamoDb } from "@/lib/dynamodb";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+import { ContentDocument } from "@/types/core";
+import { ApiResponse, UpdateDocumentRequest } from "@/types/api";
+import { wrapDocument } from "@/lib/wrapDocument";
 
-type User = {
+type DBDocument = {
   id: string;
-  name: string;
-  email: string;
-  sub: string;
+  userId: string;
+  content: string;
+  title?: string;
+  heroImage?: string;
+  mediaItem?: string;
+  playlist?: string;
+  ordinal?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { authorization } = req.headers;
-  if (!authorization) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  const { userId, adminUserId, documentId, content, heroImage, mediaItem, playlist, ordinal } = req.body as UpdateDocumentRequest;
 
-  const token = authorization.split(" ")[1];
-  const user = jwtDecode<User>(token);
-
-  const {
-    user_id,
-    admin_user_id,
-    document_id,
-    content,
-    hero_img,
-    media_item,
-    playlist,
-    ordinal,
-  } = req.body;
-
-  if (!user_id || !document_id || !content) {
+  if (!userId || !documentId || !content) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  if (user.sub !== admin_user_id) {
-    return res.status(403).json({ error: "Forbidden: You do not have access to update this document" });
-  }
+  const now = new Date().toISOString();
+
+  const updateCommand = new UpdateCommand({
+    TableName: "lbsa71_net",
+    Key: {
+      user_id: userId,
+      document_id: documentId,
+    },
+    UpdateExpression:
+      "SET content = :content, hero_img = :heroImage, media_item = :mediaItem, playlist = :playlist, ordinal = :ordinal, updatedAt = :updatedAt",
+    ExpressionAttributeValues: {
+      ":content": content,
+      ":heroImage": heroImage || null,
+      ":mediaItem": mediaItem || null,
+      ":playlist": playlist || null,
+      ":ordinal": ordinal || null,
+      ":updatedAt": now,
+    },
+    ReturnValues: "ALL_NEW",
+  });
 
   try {
-    const version_id = new Date().toISOString();
+    const data = await dynamoDb.send(updateCommand);
+    if (!data.Attributes) {
+      throw new Error("No data returned from update operation");
+    }
 
-    await dynamoDb.send(
-      new PutCommand({
-        TableName: "lbsa71_net_backup",
-        Item: {
-          user_id,
-          document_id,
-          versionId: version_id,
-          content,
-          hero_img,
-          media_item,
-          playlist,
-          ordinal,
-        },
-      })
-    );
+    // Convert from DynamoDB format to our new type system
+    const dbDoc: DBDocument = {
+      id: data.Attributes.document_id,
+      userId: data.Attributes.user_id,
+      content: data.Attributes.content,
+      title: data.Attributes.title,
+      heroImage: data.Attributes.hero_img,
+      mediaItem: data.Attributes.media_item,
+      playlist: data.Attributes.playlist,
+      ordinal: data.Attributes.ordinal,
+      createdAt: data.Attributes.createdAt,
+      updatedAt: data.Attributes.updatedAt,
+    };
 
-    const result = await dynamoDb.send(
-      new UpdateCommand({
-        TableName: "lbsa71_net",
-        Key: { user_id, document_id },
-        UpdateExpression:
-          "set content = :content, media_item = :media_item, hero_img = :hero_img, playlist = :playlist, ordinal = :ordinal",
-        ExpressionAttributeValues: {
-          ":content": content,
-          ":hero_img": hero_img || null,
-          ":media_item": media_item || null,
-          ":playlist": playlist || null,
-          ":ordinal": ordinal || null,
-        },
-        ReturnValues: "UPDATED_NEW",
-      })
-    );
-
-    const contentDocument = { user_id, document_id, ...result.Attributes };
-    res.status(200).json({ message: "Post updated successfully", ...contentDocument });
+    const document = wrapDocument(dbDoc);
+    res.status(200).json({ data: document });
   } catch (error) {
-    console.error("Update Error:", error);
-    res.status(500).json({ error: "Failed to update post" });
+    console.error(error);
+    res.status(500).json({ error: "Failed to update document" });
   }
 };
 

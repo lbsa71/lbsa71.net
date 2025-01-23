@@ -1,19 +1,23 @@
 import MarkdownEditor from "@/components/MarkdownEditor";
-import { Config, ContentDocument, ReqContext } from "@/lib/getSite";
+import { Config } from "@/lib/getSite";
+import { ContentDocument } from "@/types/core";
 import axios from "axios";
 import getConfig from "next/config";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export const defaultDocument: ContentDocument = {
-  hero_img: "",
-  media_item: "",
-  user_id: "",
+  id: "",
+  userId: "",
   title: "",
   content: "",
-  document_id: "",
+  heroImage: "",
+  mediaItem: "",
   playlist: "",
   ordinal: "",
+  nodes: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 type APIContentDocument = {
@@ -36,8 +40,8 @@ const fetchDocument = (
     .catch((error) => {
       setDocument({
         ...defaultDocument,
-        user_id: userId,
-        document_id: documentId,
+        userId,
+        id: documentId,
       });
       return console.error("Failed to fetch document", error);
     });

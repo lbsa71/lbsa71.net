@@ -12,52 +12,43 @@ export type Redirect = {
 
 export type Site = {
   title: string;
-  user_id: string;
-  admin_user_id: string;
+  userId: string;
+  adminUserId: string;
   urls: string[];
   playlists: string[];
   feed?: string;
   theme: string;
-  media_folder: string;
-  media_url: string;
+  mediaFolder: string;
+  mediaUrl: string;
   byline: string;
   banner?: string;
   redirect?: Redirect;
 };
 
-type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'admin_user_id'>> & {
-  user_id: string;
+type SiteConfig = Partial<Omit<Site, 'userId' | 'urls' | 'adminUserId'>> & {
+  userId: string;
   urls: string[];
-  admin_user_id: string;
+  adminUserId: string;
 };
 
 const wrap = (site: SiteConfig): Site => {
-  const media_folder = site.media_folder ?? site.user_id;
-  const media_url = `https://media.lbsa71.net/${media_folder}`;
-  const title = site.title ?? site.user_id;
+  const mediaFolder = site.mediaFolder ?? site.userId;
+  const mediaUrl = `https://media.lbsa71.net/${mediaFolder}`;
+  const title = site.title ?? site.userId;
   const byline = site.byline ?? "";
 
   return {
     theme: "default",
     playlists: [],
     ...site,
-    media_folder,
-    media_url,
+    mediaFolder,
+    mediaUrl,
     title,
     byline,
   };
 };
 
-export type ContentDocument = {
-  content: string;
-  document_id: string;
-  hero_img: string;
-  media_item: string;
-  ordinal: string;
-  playlist: string;
-  title: string;
-  user_id: string;
-};
+export type { ContentDocument } from '@/types/core';
 
 export type RequestHeaders = {
   host?: string;
@@ -94,11 +85,11 @@ export function findSiteByDomain(config: Config, domain: string): Site {
   return wrap(site);
 }
 
-export function findSiteByUserId(config: Config, user_id: string): Site {
-  const site = config.sites.find((site) => site.user_id === user_id);
+export function findSiteByUserId(config: Config, userId: string): Site {
+  const site = config.sites.find((site) => site.userId === userId);
 
   if (!site) {
-    throw new Error(`Site configuration not found for user: ${user_id}`);
+    throw new Error(`Site configuration not found for user: ${userId}`);
   }
 
   return wrap(site);

@@ -1,11 +1,26 @@
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { dynamoDb } from "@/lib/dynamodb";
 import { VercelRequest, VercelResponse } from "@vercel/node";
-import { ContentDocument } from "@/lib/getSite";
+import { ContentDocument } from "@/types/core";
+import { ApiResponse } from "@/types/api";
 import { localDocuments } from "./localDocuments";
+import { wrapDocument } from "@/lib/wrapDocument";
 
-export const listDocuments = async (user_id: string) => {
-  if (user_id === "local") {
+type DBDocument = {
+  id: string;
+  userId: string;
+  content: string;
+  title?: string;
+  heroImage?: string;
+  mediaItem?: string;
+  playlist?: string;
+  ordinal?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const listDocuments = async (userId: string): Promise<ContentDocument[]> => {
+  if (userId === "local") {
     return localDocuments;
   }
 
@@ -13,29 +28,41 @@ export const listDocuments = async (user_id: string) => {
     TableName: "lbsa71_net",
     KeyConditionExpression: "user_id = :uid",
     ExpressionAttributeValues: {
-      ":uid": user_id,
+      ":uid": userId,
     },
   });
 
   const data = await dynamoDb.send(queryCommand);
-  return data.Items as ContentDocument[] | undefined;
+  if (!data.Items) return [];
+
+  // Convert from DynamoDB format to our new type system
+  return data.Items.map(item => {
+    const dbDoc: DBDocument = {
+      id: item.document_id,
+      userId: item.user_id,
+      content: item.content,
+      title: item.title,
+      heroImage: item.hero_img,
+      mediaItem: item.media_item,
+      playlist: item.playlist,
+      ordinal: item.ordinal,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    };
+    return wrapDocument(dbDoc);
+  });
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id } = req.query;
+  const { user_id: userId } = req.query;
 
-  if (typeof user_id !== "string") {
-    return res.status(400).json({ error: "Invalid query" });
+  if (typeof userId !== "string") {
+    return res.status(400).json({ error: "Invalid query parameters" });
   }
 
   try {
-    const items = await listDocuments(user_id);
-
-    if (items) {
-      res.status(200).json(items);
-    } else {
-      res.status(404).json({ message: "No documents found" });
-    }
+    const documents = await listDocuments(userId);
+    res.status(200).json({ data: documents });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to query documents" });

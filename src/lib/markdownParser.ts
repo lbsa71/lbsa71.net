@@ -1,55 +1,10 @@
-type NodeType = 'text' | 'header' | 'paragraph' | 'link' | 'track_info' | 'image';
+import { BaseNode, TextNode, HeaderNode, ParagraphNode, TrackNode, DocumentNode, MediaItem } from '../types/core';
 
-type BaseNode = {
-  type: NodeType;
-};
-
-type TextNode = BaseNode & {
-  type: 'text';
-  value: string;
-};
-
-type HeaderNode = BaseNode & {
-  type: 'header';
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  children: InlineNode[];
-};
-
-type ParagraphNode = BaseNode & {
-  type: 'paragraph';
-  children: InlineNode[];
-  position?: number;
-  hasTrack?: boolean;
-};
-
-type LinkNode = BaseNode & {
-  type: 'link';
-  url: string;
-  children: TextNode[];
-};
-
-type ImageNode = BaseNode & {
-  type: 'image';
-  src: string;
-  alt: string;
-  position?: number;
-};
-
-type TrackInfoNode = BaseNode & {
-  type: 'track_info';
-  title: string;
-  artist: string;
-  album?: string;
-  position: number;
-  images?: ImageNode[];
-};
-
-export type Node = TextNode | HeaderNode | ParagraphNode | LinkNode | TrackInfoNode | ImageNode;
-type InlineNode = TextNode | LinkNode;
+type InlineNode = TextNode;
 
 type ParsedDocument = {
-  nodes: Node[];
-  tracks: TrackInfoNode[];
+  nodes: DocumentNode[];
+  tracks: TrackNode[];
 };
 
 function parseInlineContent(text: string): InlineNode[] {
@@ -58,61 +13,14 @@ function parseInlineContent(text: string): InlineNode[] {
   let position = 0;
 
   while (position < text.length) {
-    const linkStart = text.indexOf('[', position);
-    
-    if (linkStart === -1) {
-      currentText += text.slice(position);
-      break;
-    }
-
-    if (linkStart > position) {
-      currentText += text.slice(position, linkStart);
-    }
-
-    const linkTextEnd = text.indexOf(']', linkStart);
-    if (linkTextEnd === -1) {
-      currentText += text.slice(position);
-      break;
-    }
-
-    const linkUrlStart = text.indexOf('(', linkTextEnd);
-    if (linkUrlStart === -1 || linkUrlStart !== linkTextEnd + 1) {
-      currentText += text.slice(position, linkTextEnd + 1);
-      position = linkTextEnd + 1;
-      continue;
-    }
-
-    const linkUrlEnd = text.indexOf(')', linkUrlStart);
-    if (linkUrlEnd === -1) {
-      currentText += text.slice(position);
-      break;
-    }
-
-    if (currentText) {
+    if (position < text.length) {
       nodes.push({
+        id: `text-${position}`,
         type: 'text',
-        value: currentText
+        content: text.slice(position)
       });
-      currentText = '';
+      break;
     }
-
-    nodes.push({
-      type: 'link',
-      url: text.slice(linkUrlStart + 1, linkUrlEnd),
-      children: [{
-        type: 'text',
-        value: text.slice(linkStart + 1, linkTextEnd)
-      }]
-    });
-
-    position = linkUrlEnd + 1;
-  }
-
-  if (currentText) {
-    nodes.push({
-      type: 'text',
-      value: currentText
-    });
   }
 
   return nodes;
@@ -120,20 +28,20 @@ function parseInlineContent(text: string): InlineNode[] {
 
 export function parseMarkdown(markdown: string): ParsedDocument {
   const lines = markdown.split('\n');
-  const nodes: Node[] = [];
-  const tracks: TrackInfoNode[] = [];
+  const nodes: DocumentNode[] = [];
+  const tracks: TrackNode[] = [];
   let currentParagraph: string[] = [];
   let currentPosition: number | undefined;
   let hasCurrentTrack = false;
-  let currentTrack: TrackInfoNode | null = null;
+  let currentTrack: TrackNode | null = null;
 
   function flushParagraph() {
     if (currentParagraph.length > 0) {
       const text = currentParagraph.join('\n');
-      const inlineNodes = parseInlineContent(text);
       nodes.push({
+        id: `p-${nodes.length}`,
         type: 'paragraph',
-        children: inlineNodes,
+        content: text,
         position: currentPosition,
         hasTrack: hasCurrentTrack
       });
@@ -143,7 +51,7 @@ export function parseMarkdown(markdown: string): ParsedDocument {
     }
   }
 
-  function parseTrackInfo(text: string): TrackInfoNode | null {
+  function parseTrackInfo(text: string): TrackNode | null {
     const match = text.match(/^(.+?)(?:\s*-\s*(.+?))?(?:\s*\((.+?)\))?\s*\[(\d+)\]$/);
     if (!match) return null;
 
@@ -152,25 +60,13 @@ export function parseMarkdown(markdown: string): ParsedDocument {
     if (isNaN(position)) return null;
 
     return {
-      type: 'track_info',
+      id: `track-${position}`,
+      type: 'track',
       title: title.trim(),
       artist: artist.trim(),
       album: album.trim() || undefined,
       position,
-      images: []
-    };
-  }
-
-  function parseImage(text: string): ImageNode | null {
-    const match = text.match(/!\[([^\]]*)\]\(([^)]+)\)/);
-    if (!match) return null;
-
-    const [, alt, src] = match;
-    return {
-      type: 'image',
-      src,
-      alt,
-      position: currentTrack?.position
+      media: []
     };
   }
 
@@ -207,19 +103,11 @@ export function parseMarkdown(markdown: string): ParsedDocument {
       }
 
       nodes.push({
+        id: `h${level}-${nodes.length}`,
         type: 'header',
         level,
-        children: parseInlineContent(content)
+        content
       });
-      continue;
-    }
-
-    const imageMatch = parseImage(trimmedLine);
-    if (imageMatch) {
-      if (currentTrack) {
-        currentTrack.images = currentTrack.images || [];
-        currentTrack.images.push(imageMatch);
-      }
       continue;
     }
 

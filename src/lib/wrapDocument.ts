@@ -1,19 +1,40 @@
-import { ContentDocument, Optional } from "@/lib/getSite";
+import { ContentDocument } from "@/types/core";
+import { parseMarkdown } from "./markdownParser";
 
-export const wrapDocument = (doc: Optional<ContentDocument, "title">) => {
-  let { content, title, document_id } = doc;
+type DBDocument = {
+  id: string;
+  userId: string;
+  content: string;
+  title?: string;
+  heroImage?: string;
+  mediaItem?: string;
+  playlist?: string;
+  ordinal?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const wrapDocument = (doc: DBDocument): ContentDocument => {
+  let { content, title } = doc;
 
   if (!title) {
     const match = content.match(/^#\s+(.*)/m);
-    if (match) {
-      title = match[1];
-    } else {
-      title = document_id;
-    }
+    title = match ? match[1] : doc.id;
   }
 
+  const { nodes } = parseMarkdown(content);
+
   return {
-    ...doc,
+    id: doc.id,
+    userId: doc.userId,
+    content,
     title,
-  } as ContentDocument;
+    heroImage: doc.heroImage,
+    mediaItem: doc.mediaItem,
+    playlist: doc.playlist,
+    ordinal: doc.ordinal,
+    nodes,
+    createdAt: doc.createdAt || new Date().toISOString(),
+    updatedAt: doc.updatedAt || new Date().toISOString(),
+  };
 };

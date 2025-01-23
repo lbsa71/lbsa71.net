@@ -1,19 +1,18 @@
 import { RefObject } from "react";
 import styles from "../../styles/content-document.module.css";
-import { Node } from "../../lib/markdownParser";
-import { TrackInfo } from "./types";
+import { DocumentNode, TrackNode } from "../../types/core";
 import { NodeRenderer } from "./NodeRenderer";
 
 type DocumentPanelProps = {
-  nodes: Node[];
-  media_url: string;
-  currentTrack: TrackInfo | null;
+  nodes: DocumentNode[];
+  mediaUrl: string;
+  currentTrack: TrackNode | null;
   highlightedRef: RefObject<HTMLParagraphElement>;
 };
 
 export const DocumentPanel = ({
   nodes,
-  media_url,
+  mediaUrl,
   currentTrack,
   highlightedRef,
 }: DocumentPanelProps) => (
@@ -23,7 +22,7 @@ export const DocumentPanel = ({
         <NodeRenderer
           key={index}
           node={node}
-          media_url={media_url}
+          mediaUrl={mediaUrl}
           currentTrack={currentTrack}
           highlightedRef={highlightedRef}
         />

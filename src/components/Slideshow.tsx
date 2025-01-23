@@ -1,82 +1,75 @@
-import React, { useState } from 'react';
-import styles from '../styles/Slideshow.module.css';
+import { useState } from "react";
+import styles from "../styles/Slideshow.module.css";
+import { MediaItem } from "../types/core";
 
-interface SlideShowProps {
-  images?: { src: string; alt: string }[];
-  media_url: string;
-}
+type SlideshowProps = {
+  images: MediaItem[];
+  mediaUrl: string;
+};
 
-export const Slideshow: React.FC<SlideShowProps> = ({ images, media_url }) => {
+export const Slideshow = ({ images, mediaUrl }: SlideshowProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  if (!images || images.length === 0) {
-    return null;
-  }
+  const handlePrevClick = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+    );
+  };
 
-  const currentImage = images[currentImageIndex];
-  if (!currentImage || !currentImage.src) {
-    return null;
-  }
+  const handleNextClick = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
 
-  const imageSrc = currentImage.src.startsWith('http') 
-    ? currentImage.src 
-    : `${media_url}/${currentImage.src}`;
-
-  const handleClick = () => {
+  const toggleZoom = () => {
     setIsZoomed(!isZoomed);
   };
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
+  if (!images || images.length === 0) return null;
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  const currentImage = images[currentIndex];
+  const imageUrl = currentImage.url.startsWith("http") 
+    ? currentImage.url 
+    : `${mediaUrl}/${currentImage.url}`;
 
   return (
-    <>
-      <div 
-        className={`${styles.slideshow} ${isZoomed ? styles.zoomed : ''}`}
-        onClick={handleClick}
-      >
-        <img 
-          src={imageSrc} 
-          alt={currentImage.alt || ''} 
-          className={styles.image}
-        />
-        {images.length > 1 && (
-          <>
-            <button 
-              className={`${styles.navButton} ${styles.prevButton}`}
-              onClick={handlePrev}
-            >
-              ‹
-            </button>
-            <button 
-              className={`${styles.navButton} ${styles.nextButton}`}
-              onClick={handleNext}
-            >
-              ›
-            </button>
-            <div className={styles.counter}>
-              {currentImageIndex + 1} / {images.length}
-            </div>
-          </>
-        )}
-      </div>
+    <div className={styles.slideshow}>
+      <img
+        src={imageUrl}
+        alt={currentImage.alt || ""}
+        className={styles.image}
+        onClick={toggleZoom}
+      />
+      {images.length > 1 && (
+        <>
+          <button
+            className={`${styles.navButton} ${styles.prevButton}`}
+            onClick={handlePrevClick}
+          >
+            ‹
+          </button>
+          <button
+            className={`${styles.navButton} ${styles.nextButton}`}
+            onClick={handleNextClick}
+          >
+            ›
+          </button>
+          <div className={styles.counter}>
+            {currentIndex + 1} / {images.length}
+          </div>
+        </>
+      )}
       {isZoomed && (
-        <div className={styles.overlay} onClick={handleClick}>
-          <img 
-            src={imageSrc} 
-            alt={currentImage.alt || ''} 
+        <div className={styles.overlay} onClick={toggleZoom}>
+          <img
+            src={imageUrl}
+            alt={currentImage.alt || ""}
             className={styles.zoomedImage}
           />
         </div>
       )}
-    </>
+    </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { ContentDocument, Site } from "../lib/getSite";
+import { Site, ContentDocument } from "../types/core";
 import styles from "../styles/content-document.module.css";
 import { DocumentProvider } from "../context/DocumentContext";
 import { useRouter } from "next/router";
@@ -23,22 +23,24 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   const play = "play" in router.query;
 
   const contentDocument = typeof document === "string"
-    ? documents.find((doc) => doc.document_id === document) ?? 
+    ? documents.find((doc) => doc.id === document) ?? 
       (() => { throw new Error(`Document not found: ${document}`) })()
     : document;
 
-  const { document_id, user_id, content, hero_img, media_item, playlist } = contentDocument;
-  const { media_url } = site;
+  const { id, userId, content, heroImage, mediaItem, playlist } = contentDocument;
+  const { mediaUrl } = site;
 
   const playListItems = documents
     .filter((doc) => doc.playlist === playlist)
-    .sort((a, b) => safe(a.ordinal).localeCompare(b.ordinal, undefined, {
-      numeric: true,
-    }));
+    .sort((a, b) => {
+      const ordinalA = a.ordinal ?? '';
+      const ordinalB = b.ordinal ?? '';
+      return ordinalA.localeCompare(ordinalB, undefined, { numeric: true });
+    });
 
   const { currentTrack, tracks, onAudioEnd, onTrackChange } = useTrackManagement({
     content,
-    document_id,
+    documentId: id,
     playListItems,
     duration,
     currentTime,
@@ -54,16 +56,16 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   }, [currentTrack]);
 
   const parsedContent = parseMarkdown(content);
-  const mediaPanel = Boolean(media_item || hero_img || playlist);
+  const mediaPanel = Boolean(mediaItem || heroImage || playlist);
 
   return (
-    <DocumentProvider value={{ user_id, document_id }}>
+    <DocumentProvider value={{ userId, documentId: id }}>
       <div className={styles["content-document-container"]}>
         {mediaPanel && (
           <MediaPanel
-            hero_img={hero_img}
-            media_item={media_item}
-            media_url={media_url}
+            heroImage={heroImage}
+            mediaItem={mediaItem}
+            mediaUrl={mediaUrl}
             playlist={playlist}
             currentTrack={currentTrack}
             playListItems={playListItems}
@@ -75,7 +77,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
         )}
         <DocumentPanel
           nodes={parsedContent.nodes}
-          media_url={media_url}
+          mediaUrl={mediaUrl}
           currentTrack={currentTrack}
           highlightedRef={highlightedRef}
         />

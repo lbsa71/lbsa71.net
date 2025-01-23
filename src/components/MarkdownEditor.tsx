@@ -26,7 +26,7 @@ const MarkdownRenderer = ({
   site,
   setDocument,
 }: MarkdownRendererProps) => {
-  const isEditMode = document.user_id && document.document_id;
+  const isEditMode = document.userId && document.id;
 
   const handleInputChange = (field: keyof ContentDocument) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,8 +53,8 @@ const MarkdownRenderer = ({
           <input
             type="text"
             placeholder="User ID"
-            value={document.user_id}
-            onChange={handleInputChange("user_id")}
+            value={document.userId}
+            onChange={handleInputChange("userId")}
             style={{
               marginRight: "10px",
               padding: "10px",
@@ -64,22 +64,22 @@ const MarkdownRenderer = ({
           <input
             type="text"
             placeholder="Document ID (leave blank to create)"
-            value={document.document_id}
-            onChange={handleInputChange("document_id")}
+            value={document.id}
+            onChange={handleInputChange("id")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Hero image URL"
-            value={document.hero_img}
-            onChange={handleInputChange("hero_img")}
+            value={document.heroImage}
+            onChange={handleInputChange("heroImage")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Media Item URL"
-            value={document.media_item}
-            onChange={handleInputChange("media_item")}
+            value={document.mediaItem}
+            onChange={handleInputChange("mediaItem")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
@@ -144,12 +144,12 @@ export const MarkdownEditor = ({
   setDocument,
   _config
 }: MarkdownEditorProps) => {
-  const { user_id, document_id } = document;
+  const { userId, id } = document;
 
-  if (!user_id) return null;
+  if (!userId) return null;
 
-  const site = findSiteByUserId(_config, user_id);
-  const isEditMode = user_id && document_id;
+  const site = findSiteByUserId(_config, userId);
+  const isEditMode = userId && id;
 
   const handleSave = async () => {
     const endpoint = isEditMode ? "/api/update" : "/api/create";
@@ -167,7 +167,7 @@ export const MarkdownEditor = ({
 
     try {
       await axios.delete("/api/delete", {
-        data: { user_id, document_id },
+        data: { userId, id },
       });
       setDocument(defaultDocument);
       alert("Document deleted successfully");

@@ -1,19 +1,18 @@
 import { RefObject } from "react";
 import styles from "../../styles/content-document.module.css";
 import MediaItem from "../MediaItem";
-import { Node } from "../../lib/markdownParser";
-import { TrackInfo } from "./types";
+import { DocumentNode, TrackNode } from "../../types/core";
 
 type NodeRendererProps = {
-  node: Node;
-  media_url: string;
-  currentTrack: TrackInfo | null;
+  node: DocumentNode;
+  mediaUrl: string;
+  currentTrack: TrackNode | null;
   highlightedRef: RefObject<HTMLParagraphElement>;
 };
 
 type HeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
-const hasChildren = (node: Node): node is Node & { children: Node[] } =>
+const hasChildren = (node: DocumentNode): node is DocumentNode & { children: DocumentNode[] } =>
   'children' in node && Array.isArray(node.children);
 
 const renderChildren = (props: NodeRendererProps) => {
@@ -21,7 +20,7 @@ const renderChildren = (props: NodeRendererProps) => {
   
   return (
     <>
-      {props.node.children.map((child: Node, index: number) => (
+      {props.node.children.map((child: DocumentNode, index: number) => (
         <NodeRenderer
           key={index}
           {...props}
@@ -34,19 +33,19 @@ const renderChildren = (props: NodeRendererProps) => {
 
 export const NodeRenderer = ({
   node,
-  media_url,
+  mediaUrl,
   currentTrack,
   highlightedRef,
 }: NodeRendererProps) => {
   switch (node.type) {
     case 'text':
-      return <>{node.value}</>;
+      return <>{node.content}</>;
 
     case 'header': {
       const HeaderTag = `h${node.level as HeaderLevel}` as keyof JSX.IntrinsicElements;
       return (
         <HeaderTag>
-          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+          {node.content}
         </HeaderTag>
       );
     }
@@ -61,20 +60,12 @@ export const NodeRenderer = ({
           ref={isHighlighted ? highlightedRef : null}
           className={isHighlighted ? styles['highlighted-paragraph'] : undefined}
         >
-          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+          {node.content}
         </p>
       );
     }
 
-    case 'link':
-      return (
-        <MediaItem href={node.url} media_url={media_url}>
-          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
-        </MediaItem>
-      );
-
-    case 'track_info':
-    case 'image':
+    case 'track':
       return null;
 
     default: {

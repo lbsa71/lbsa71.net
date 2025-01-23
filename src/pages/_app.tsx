@@ -54,7 +54,7 @@ const MyApp = ({ Component, pageProps }: AppPropsWithSite) => {
 
   return (
     <AuthProvider>
-      <AudioProvider>
+      <AudioProvider src="">
         <GlobalLayout site={pageProps.site}>
           <div style={{ position: 'absolute', top: 10, right: 10 }}>
             <button onClick={() => setMenuOpen((prev) => !prev)}>

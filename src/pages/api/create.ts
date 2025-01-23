@@ -1,43 +1,60 @@
-import { randomUUID } from "crypto";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { dynamoDb } from "@/lib/dynamodb";
+import { VercelRequest, VercelResponse } from "@vercel/node";
+import { ContentDocument } from "@/types/core";
+import { ApiResponse, CreateDocumentRequest } from "@/types/api";
+import { wrapDocument } from "@/lib/wrapDocument";
 
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { PutCommand, dynamoDb } from "@/lib/dynamodb";
+type DBDocument = {
+  id: string;
+  userId: string;
+  content: string;
+  title?: string;
+  heroImage?: string;
+  mediaItem?: string;
+  playlist?: string;
+  ordinal?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, content } = req.body;
-  let { document_id } = req.body;
+  const { userId, documentId = new Date().toISOString(), content } = req.body as CreateDocumentRequest;
 
-  if (!document_id) {
-    document_id = randomUUID();
+  if (!userId || !content) {
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Adjust this to be more restrictive if needed
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const now = new Date().toISOString();
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  const putCommand = new PutCommand({
+    TableName: "lbsa71_net",
+    Item: {
+      user_id: userId,
+      document_id: documentId,
+      content,
+      createdAt: now,
+      updatedAt: now,
+    },
+  });
 
   try {
-    const data = await dynamoDb.send(
-      new PutCommand({
-        TableName: "lbsa71_net",
-        Item: {
-          user_id,
-          document_id,
-          content,
-        },
-      })
-    );
+    await dynamoDb.send(putCommand);
 
-    res.status(200).json({ message: "Post created", document_id, data });
+    // Convert to our new type system
+    const dbDoc: DBDocument = {
+      id: documentId,
+      userId,
+      content,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const document = wrapDocument(dbDoc);
+    res.status(200).json({ data: document });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to create post" });
+    res.status(500).json({ error: "Failed to create document" });
   }
 };
 

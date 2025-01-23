@@ -12,9 +12,9 @@ import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export async function getServerSideProps(context: ReqContext) {
   const site = await fetchSiteByContext(context);
-  const { user_id } = site;
+  const { userId } = site;
 
-  const documents = (await listDocuments(user_id))?.map(wrapDocument);
+  const documents = (await listDocuments(userId))?.map(wrapDocument);
 
   if (!documents || documents.length === 0) {
     return {
@@ -26,10 +26,10 @@ export async function getServerSideProps(context: ReqContext) {
   }
 
   if (documents.length === 1) {
-    const { document_id } = documents[0];
+    const { id } = documents[0];
     return {
       redirect: {
-        destination: `/read/${document_id}`,
+        destination: `/read/${id}`,
         permanent: false,
       },
     };
@@ -52,7 +52,7 @@ const List = ({
   );
 
   const getPlaylistName = (doc: ContentDocument): string =>
-    playlists?.includes(doc.playlist) ? doc.playlist : "Miscellaneous";
+    playlists?.includes(doc.playlist || "") ? doc.playlist || "" : "Miscellaneous";
 
   documents.forEach((doc) => {
     const playlistName = getPlaylistName(doc);
@@ -101,10 +101,10 @@ const List = ({
                 <h2>{playlist}</h2>
                 <ul>
                   {docs.map((doc) => {
-                    const title = doc.title ?? doc.document_id;
+                    const title = doc.title ?? doc.id;
                     return (
-                      <li key={doc.document_id}>
-                        <a href={`/read/${doc.document_id}`}>{title}</a>
+                      <li key={doc.id}>
+                        <a href={`/read/${doc.id}`}>{title}</a>
                       </li>
                     );
                   })}
