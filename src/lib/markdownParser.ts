@@ -38,13 +38,19 @@ export function parseMarkdown(markdown: string): ParsedDocument {
   function flushParagraph() {
     if (currentParagraph.length > 0) {
       const text = currentParagraph.join('\n');
-      nodes.push({
+      const node : ParagraphNode = {
         id: `p-${nodes.length}`,
         type: 'paragraph',
         content: text,
-        position: currentPosition,
         hasTrack: hasCurrentTrack
-      });
+      }
+
+      if(currentPosition) {
+        node.position = currentPosition;
+      }
+
+      nodes.push(node);
+
       currentParagraph = [];
       currentPosition = undefined;
       hasCurrentTrack = false;

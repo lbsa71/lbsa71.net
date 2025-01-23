@@ -1,27 +1,14 @@
 import { UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDb } from "@/lib/dynamodb";
+import { dynamoDb, DBDocument } from "@/lib/dynamodb";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { ContentDocument } from "@/types/core";
 import { ApiResponse, UpdateDocumentRequest } from "@/types/api";
 import { wrapDocument } from "@/lib/wrapDocument";
 
-type DBDocument = {
-  id: string;
-  userId: string;
-  content: string;
-  title?: string;
-  heroImage?: string;
-  mediaItem?: string;
-  playlist?: string;
-  ordinal?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { userId, adminUserId, documentId, content, heroImage, mediaItem, playlist, ordinal } = req.body as UpdateDocumentRequest;
+  const { user_id, adminUserId, documentId, content, heroImage, mediaItem, playlist, ordinal } = req.body as UpdateDocumentRequest;
 
-  if (!userId || !documentId || !content) {
+  if (!user_id || !documentId || !content) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -30,7 +17,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   const updateCommand = new UpdateCommand({
     TableName: "lbsa71_net",
     Key: {
-      user_id: userId,
+      user_id: user_id,
       document_id: documentId,
     },
     UpdateExpression:
@@ -52,21 +39,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
       throw new Error("No data returned from update operation");
     }
 
-    // Convert from DynamoDB format to our new type system
-    const dbDoc: DBDocument = {
-      id: data.Attributes.document_id,
-      userId: data.Attributes.user_id,
-      content: data.Attributes.content,
-      title: data.Attributes.title,
-      heroImage: data.Attributes.hero_img,
-      mediaItem: data.Attributes.media_item,
-      playlist: data.Attributes.playlist,
-      ordinal: data.Attributes.ordinal,
-      createdAt: data.Attributes.createdAt,
-      updatedAt: data.Attributes.updatedAt,
-    };
-
-    const document = wrapDocument(dbDoc);
+    const document = wrapDocument(data.Attributes as DBDocument);
     res.status(200).json({ data: document });
   } catch (error) {
     console.error(error);

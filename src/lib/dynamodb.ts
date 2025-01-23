@@ -19,12 +19,29 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { getOrThrowEnvironmentVariable } from "./throwUtils";
 import { Config, findSiteByContext, findSiteByDomain, findSiteByUserId, type ReqContext } from "./getSite";
-import { localConfig } from "./localConfig";
+
+
+export type DBDocument = {
+  document_id: string;
+  user_id: string;
+  content: string;
+  title?: string;
+  heroImage?: string;
+  mediaItem?: string;
+  playlist?: string;
+  ordinal?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 // Environment variables
-const REGION = getOrThrowEnvironmentVariable("AWS_REGION");
-const ACCESS_KEY_ID = getOrThrowEnvironmentVariable("AWS_ACCESS_KEY_ID");
-const SECRET_ACCESS_KEY = getOrThrowEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+const REGION = process.env.AWS_REGION;
+const ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID;
+const SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
+
+if (!REGION || !ACCESS_KEY_ID || !SECRET_ACCESS_KEY) {
+  throw new Error("Missing AWS credentials");
+}
 
 // DynamoDB Client Configuration
 const clientConfig = {
@@ -74,11 +91,6 @@ export {
 
 // Site Configuration Operations
 export const getConfig = async (): Promise<Config> => {
-  // Use local config in development
-  if (process.env.NODE_ENV === "development") {
-    return localConfig;
-  }
-
   const queryCommand = new QueryCommand({
     TableName: SITE_CONFIG_TABLE,
     KeyConditionExpression: "user_id = :uid and document_id = :did",

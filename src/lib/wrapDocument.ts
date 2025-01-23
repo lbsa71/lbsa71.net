@@ -1,40 +1,24 @@
 import { ContentDocument } from "@/types/core";
 import { parseMarkdown } from "./markdownParser";
-
-type DBDocument = {
-  id: string;
-  userId: string;
-  content: string;
-  title?: string;
-  heroImage?: string;
-  mediaItem?: string;
-  playlist?: string;
-  ordinal?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
+import { DBDocument } from "@/lib/dynamodb";
 
 export const wrapDocument = (doc: DBDocument): ContentDocument => {
   let { content, title } = doc;
 
   if (!title) {
     const match = content.match(/^#\s+(.*)/m);
-    title = match ? match[1] : doc.id;
+    title = match ? match[1] : doc.document_id;
   }
 
   const { nodes } = parseMarkdown(content);
 
   return {
-    id: doc.id,
-    userId: doc.userId,
+    ...doc,
     content,
-    title,
-    heroImage: doc.heroImage,
-    mediaItem: doc.mediaItem,
-    playlist: doc.playlist,
-    ordinal: doc.ordinal,
+    title : title ?? "",
     nodes,
     createdAt: doc.createdAt || new Date().toISOString(),
     updatedAt: doc.updatedAt || new Date().toISOString(),
+
   };
 };

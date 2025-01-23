@@ -41,7 +41,7 @@ type DocumentNode = TextNode | HeaderNode | ParagraphNode | TrackNode;
 
 type Site = {
   title: string;
-  userId: string;
+  user_id: string;
   adminUserId: string;
   urls: string[];
   playlists: string[];
@@ -58,8 +58,8 @@ type Site = {
 };
 
 type ContentDocument = {
-  id: string;
-  userId: string;
+  document_id: string;
+  user_id: string;
   title: string;
   content: string;
   heroImage?: string;

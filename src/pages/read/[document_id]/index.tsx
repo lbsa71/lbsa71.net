@@ -11,16 +11,16 @@ export const getServerSideProps = async (
 ) => {
   const site = await fetchSiteByContext(context);
 
-  const { userId } = site;
+  const { user_id: user_id } = site;
   const documentId = context.params?.document_id;
 
-  if (typeof userId !== "string" || typeof documentId !== "string") {
+  if (typeof user_id !== "string" || typeof documentId !== "string") {
     throw new Error("Invalid query");
   }
 
-  const documents = (await listDocuments(userId))?.map(wrapDocument) ?? [];
+  const documents = (await listDocuments(user_id))?.map(wrapDocument) ?? [];
 
-  const document = documents.find((doc) => doc.id === documentId);
+  const document = documents.find((doc) => doc.document_id === documentId);
 
   return { props: { site, document, documents } };
 };

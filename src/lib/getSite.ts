@@ -12,7 +12,7 @@ export type Redirect = {
 
 export type Site = {
   title: string;
-  userId: string;
+  user_id: string;
   adminUserId: string;
   urls: string[];
   playlists: string[];
@@ -25,16 +25,16 @@ export type Site = {
   redirect?: Redirect;
 };
 
-type SiteConfig = Partial<Omit<Site, 'userId' | 'urls' | 'adminUserId'>> & {
-  userId: string;
+type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'adminUserId'>> & {
+  user_id: string;
   urls: string[];
   adminUserId: string;
 };
 
-const wrap = (site: SiteConfig): Site => {
-  const mediaFolder = site.mediaFolder ?? site.userId;
+export const wrap = (site: SiteConfig): Site => {
+  const mediaFolder = site.mediaFolder ?? site.user_id;
   const mediaUrl = `https://media.lbsa71.net/${mediaFolder}`;
-  const title = site.title ?? site.userId;
+  const title = site.title ?? site.user_id;
   const byline = site.byline ?? "";
 
   return {
@@ -85,11 +85,11 @@ export function findSiteByDomain(config: Config, domain: string): Site {
   return wrap(site);
 }
 
-export function findSiteByUserId(config: Config, userId: string): Site {
-  const site = config.sites.find((site) => site.userId === userId);
+export function findSiteByUserId(config: Config, user_id: string): Site {
+  const site = config.sites.find((site) => site.user_id === user_id);
 
   if (!site) {
-    throw new Error(`Site configuration not found for user: ${userId}`);
+    throw new Error(`Site configuration not found for user: ${user_id}`);
   }
 
   return wrap(site);

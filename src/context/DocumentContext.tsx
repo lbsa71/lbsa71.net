@@ -1,7 +1,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 
 type DocumentMetadata = {
-  userId: string;
+  user_id: string;
   documentId: string;
 };
 

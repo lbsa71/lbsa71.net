@@ -1,27 +1,14 @@
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDb } from "@/lib/dynamodb";
+import { dynamoDb, DBDocument } from "@/lib/dynamodb";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { ContentDocument } from "@/types/core";
 import { ApiResponse } from "@/types/api";
 import { localDocuments } from "./localDocuments";
 import { wrapDocument } from "@/lib/wrapDocument";
 
-type DBDocument = {
-  id: string;
-  userId: string;
-  content: string;
-  title?: string;
-  heroImage?: string;
-  mediaItem?: string;
-  playlist?: string;
-  ordinal?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export const getDocument = async (userId: string, documentId: string): Promise<ContentDocument> => {
-  if (userId === "local") {
-    const document = localDocuments.find(doc => doc.id === documentId);
+export const getDocument = async (user_id: string, documentId: string): Promise<ContentDocument> => {
+  if (user_id === "local") {
+    const document = localDocuments.find(doc => doc.document_id === documentId);
     if (!document) {
       throw new Error(`Document not found: ${documentId}`);
     }
@@ -31,7 +18,7 @@ export const getDocument = async (userId: string, documentId: string): Promise<C
   const getCommand = new GetCommand({
     TableName: "lbsa71_net",
     Key: {
-      user_id: userId,
+      user_id: user_id,
       document_id: documentId,
     },
   });
@@ -41,32 +28,18 @@ export const getDocument = async (userId: string, documentId: string): Promise<C
     throw new Error(`Document not found: ${documentId}`);
   }
 
-  // Convert from DynamoDB format to our new type system
-  const dbDoc: DBDocument = {
-    id: data.Item.document_id,
-    userId: data.Item.user_id,
-    content: data.Item.content,
-    title: data.Item.title,
-    heroImage: data.Item.hero_img,
-    mediaItem: data.Item.media_item,
-    playlist: data.Item.playlist,
-    ordinal: data.Item.ordinal,
-    createdAt: data.Item.createdAt,
-    updatedAt: data.Item.updatedAt,
-  };
-
-  return wrapDocument(dbDoc);
+  return wrapDocument(( data.Item) as DBDocument );
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id: userId, document_id: documentId } = req.query;
+  const { user_id: user_id, document_id: documentId } = req.query;
 
-  if (typeof userId !== "string" || typeof documentId !== "string") {
+  if (typeof user_id !== "string" || typeof documentId !== "string") {
     return res.status(400).json({ error: "Invalid query parameters" });
   }
 
   try {
-    const document = await getDocument(userId, documentId);
+    const document = await getDocument(user_id, documentId);
     res.status(200).json({ data: document });
   } catch (error) {
     console.error(error);

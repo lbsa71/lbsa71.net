@@ -23,11 +23,11 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   const play = "play" in router.query;
 
   const contentDocument = typeof document === "string"
-    ? documents.find((doc) => doc.id === document) ?? 
+    ? documents.find((doc) => doc.document_id === document) ?? 
       (() => { throw new Error(`Document not found: ${document}`) })()
     : document;
 
-  const { id, userId, content, heroImage, mediaItem, playlist } = contentDocument;
+  const { document_id, user_id, content, heroImage, mediaItem, playlist } = contentDocument;
   const { mediaUrl } = site;
 
   const playListItems = documents
@@ -40,7 +40,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
 
   const { currentTrack, tracks, onAudioEnd, onTrackChange } = useTrackManagement({
     content,
-    documentId: id,
+    documentId: document_id,
     playListItems,
     duration,
     currentTime,
@@ -59,7 +59,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   const mediaPanel = Boolean(mediaItem || heroImage || playlist);
 
   return (
-    <DocumentProvider value={{ userId, documentId: id }}>
+    <DocumentProvider value={{ user_id, documentId: document_id }}>
       <div className={styles["content-document-container"]}>
         {mediaPanel && (
           <MediaPanel

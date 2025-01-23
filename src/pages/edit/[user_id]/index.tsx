@@ -23,40 +23,40 @@ const EditList = ({ site }: { site: Site }) => {
   const { user } = useAuth();
 
   const [documents, setDocuments] = useState<ContentDocument[]>();
-  const userId = site.userId;
+  const user_id = site.user_id;
 
   useEffect(() => {
-    if (!userId) return;
+    if (!user_id) return;
 
     axios
-      .get<any, APIContentDocuments>(`/api/list?user_id=${userId}`)
+      .get<any, APIContentDocuments>(`/api/list?user_id=${user_id}`)
       .then((response) => {
         const documents = response.data;
         setDocuments(documents);
       })
       .catch((error) => console.error("Failed to fetch document", error));
-  }, [userId]);
+  }, [user_id]);
 
   console.log("site", JSON.stringify(site, null, 2));
   console.log("user", JSON.stringify(user, null, 2));
 
-  if (typeof userId !== "string" || !site || !user || user.sub !== site.adminUserId) {
+  if (typeof user_id !== "string" || !site || !user || user.sub !== site.adminUserId) {
     return <div>Unauthorized</div>;
   }
 
   return (
     <>
-      <h1>Documents for {userId}</h1>
+      <h1>Documents for {user_id}</h1>
       <ul>
         {documents &&
           documents.map((doc) => {
-            const title = doc.title ?? doc.id;
+            const title = doc.title ?? doc.document_id;
             return (
-              <li key={doc.id}>
-                <a href={`/edit/${doc.userId}/${doc.id}`}>{title}</a>
+              <li key={doc.document_id}>
+                <a href={`/edit/${doc.user_id}/${doc.document_id}`}>{title}</a>
                 &nbsp;
                 <a
-                  href={`/api/delete?user_id=${doc.userId}/${doc.id}`}
+                  href={`/api/delete?user_id=${doc.user_id}/${doc.document_id}`}
                 >
                   Delete
                 </a>

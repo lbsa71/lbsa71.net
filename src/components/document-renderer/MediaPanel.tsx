@@ -72,9 +72,9 @@ export const MediaPanel = ({
         <nav className={styles["playlist"]}>
           <ul>
             {playListItems.map((item) => (
-              <li key={item.id}>
+              <li key={item.document_id}>
                 <a
-                  href={`/read/${item.id}`}
+                  href={`/read/${item.document_id}`}
                   className={styles["playlist-item"]}
                 >
                   {item.title}

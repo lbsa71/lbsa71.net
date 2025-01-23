@@ -3,8 +3,8 @@ import { ContentDocument } from "@/types/core";
 const now = new Date().toISOString();
 
 export const localDocument: ContentDocument = {
-  id: "local1",
-  userId: "local",
+  document_id: "local1",
+  user_id: "local",
   content: "# HALLAS1",
   title: "HALLAS1",
   mediaItem: "http://localhost:3000/demo/CantinaBand3.wav",
@@ -17,8 +17,8 @@ export const localDocument: ContentDocument = {
 };
 
 const localDocument2: ContentDocument = {
-  id: "local2",
-  userId: "local",
+  document_id: "local2",
+  user_id: "local",
   content: "# HALLAS2",
   title: "HALLAS2",
   mediaItem: "http://localhost:3000/demo/ovre-bygden-den-som-lovar-listening.mp4",
@@ -31,8 +31,8 @@ const localDocument2: ContentDocument = {
 };
 
 const localDocument3: ContentDocument = {
-  id: "local3",
-  userId: "local",
+  document_id: "local3",
+  user_id: "local",
   content: "# HALLAS3",
   title: "HALLAS3",
   mediaItem: "http://localhost:3000/demo/StarWars3.wav",
@@ -45,8 +45,8 @@ const localDocument3: ContentDocument = {
 };
 
 const localDocument4: ContentDocument = {
-  id: "local4",
-  userId: "local",
+  document_id: "local4",
+  user_id: "local",
   content: "# Mixes1",
   title: "Mixes1",
   mediaItem: "http://localhost:3000/demo/StarWars3.wav",
@@ -59,8 +59,8 @@ const localDocument4: ContentDocument = {
 };
 
 const localDocument5: ContentDocument = {
-  id: "local5",
-  userId: "local",
+  document_id: "local5",
+  user_id: "local",
   content: "# Mixes2",
   title: "Mixes2",
   mediaItem: "http://localhost:3000/demo/StarWars3.wav",

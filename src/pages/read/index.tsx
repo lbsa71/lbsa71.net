@@ -12,10 +12,15 @@ import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export async function getServerSideProps(context: ReqContext) {
   const site = await fetchSiteByContext(context);
-  const { userId } = site;
 
-  const documents = (await listDocuments(userId))?.map(wrapDocument);
+  console.log("site", JSON.stringify(site, null, 2));
 
+  const { user_id } = site;
+
+  const documents = (await listDocuments(user_id))?.map(wrapDocument);
+
+
+  console.log("documents", JSON.stringify(documents, null, 2));
   if (!documents || documents.length === 0) {
     return {
       redirect: {
@@ -26,10 +31,10 @@ export async function getServerSideProps(context: ReqContext) {
   }
 
   if (documents.length === 1) {
-    const { id } = documents[0];
+    const { document_id } = documents[0];
     return {
       redirect: {
-        destination: `/read/${id}`,
+        destination: `/read/${document_id}`,
         permanent: false,
       },
     };
@@ -101,10 +106,10 @@ const List = ({
                 <h2>{playlist}</h2>
                 <ul>
                   {docs.map((doc) => {
-                    const title = doc.title ?? doc.id;
+                    const title = doc.title ?? doc.document_id;
                     return (
-                      <li key={doc.id}>
-                        <a href={`/read/${doc.id}`}>{title}</a>
+                      <li key={doc.document_id}>
+                        <a href={`/read/${doc.document_id}`}>{title}</a>
                       </li>
                     );
                   })}

@@ -2,7 +2,7 @@ import { Config } from "./getSite";
 
 export const localConfig: Config = {
   defaultSite: {
-    userId: "local",
+    user_id: "local",
     adminUserId: "local",
     urls: ["localhost:3000", "localhost:3001"],
     title: "Local Development",
@@ -13,7 +13,7 @@ export const localConfig: Config = {
   },
   sites: [
     {
-      userId: "local",
+      user_id: "local",
       adminUserId: "local",
       urls: ["localhost:3000", "localhost:3001"],
       title: "Local Development",

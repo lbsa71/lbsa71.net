@@ -7,13 +7,13 @@ export type ApiResponse<T> = {
 };
 
 export type CreateDocumentRequest = {
-  userId: string;
+  user_id: string;
   documentId?: string;
   content: string;
 };
 
 export type UpdateDocumentRequest = {
-  userId: string;
+  user_id: string;
   adminUserId: string;
   documentId: string;
   content: string;
@@ -24,7 +24,7 @@ export type UpdateDocumentRequest = {
 };
 
 export type DeleteDocumentRequest = {
-  userId: string;
+  user_id: string;
   documentId: string;
 };
 

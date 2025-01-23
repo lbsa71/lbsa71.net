@@ -7,8 +7,8 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 export const defaultDocument: ContentDocument = {
-  id: "",
-  userId: "",
+  document_id: "",
+  user_id: "",
   title: "",
   content: "",
   heroImage: "",
@@ -25,13 +25,13 @@ type APIContentDocument = {
 };
 
 const fetchDocument = (
-  userId: string,
+  user_id: string,
   documentId: string,
   setDocument: React.Dispatch<React.SetStateAction<ContentDocument>>
 ) => {
   axios
     .get<any, APIContentDocument>(
-      `/api/read?user_id=${userId}&document_id=${documentId}`
+      `/api/read?user_id=${user_id}&document_id=${documentId}`
     )
     .then((response) => {
       const document = response.data;
@@ -40,8 +40,8 @@ const fetchDocument = (
     .catch((error) => {
       setDocument({
         ...defaultDocument,
-        userId,
-        id: documentId,
+        user_id,
+        document_id: documentId,
       });
       return console.error("Failed to fetch document", error);
     });
