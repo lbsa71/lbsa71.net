@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Site, ContentDocument } from "../types/core";
+import { ContentDocument, Site } from "../lib/getSite";
 import styles from "../styles/content-document.module.css";
 import { DocumentProvider } from "../context/DocumentContext";
 import { useRouter } from "next/router";
@@ -32,11 +32,9 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
 
   const playListItems = documents
     .filter((doc) => doc.playlist === playlist)
-    .sort((a, b) => {
-      const ordinalA = a.ordinal ?? '';
-      const ordinalB = b.ordinal ?? '';
-      return ordinalA.localeCompare(ordinalB, undefined, { numeric: true });
-    });
+    .sort((a, b) => safe(a.ordinal).localeCompare(b.ordinal, undefined, {
+      numeric: true,
+    }));
 
   const { currentTrack, tracks, onAudioEnd, onTrackChange } = useTrackManagement({
     content,
