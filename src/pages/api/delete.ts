@@ -14,7 +14,7 @@ const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
   const deleteCommand = new DeleteCommand({
     TableName: "lbsa71_net",
     Key: {
-      user_id: user_id,
+      user_id,
       document_id,
     },
   });

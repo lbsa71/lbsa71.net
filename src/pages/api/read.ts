@@ -18,7 +18,7 @@ export const getDocument = async (user_id: string, document_id: string): Promise
   const getCommand = new GetCommand({
     TableName: "lbsa71_net",
     Key: {
-      user_id: user_id,
+      user_id,
       document_id,
     },
   });
@@ -32,7 +32,7 @@ export const getDocument = async (user_id: string, document_id: string): Promise
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id: user_id, document_id } = req.query;
+  const { user_id, document_id } = req.query;
 
   if (typeof user_id !== "string" || typeof document_id !== "string") {
     return res.status(400).json({ error: "Invalid query parameters" });

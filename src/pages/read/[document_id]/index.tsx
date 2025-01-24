@@ -11,7 +11,7 @@ export const getServerSideProps = async (
 ) => {
   const site = await fetchSiteByContext(context);
 
-  const { user_id: user_id } = site;
+  const { user_id } = site;
   const document_id = context.params?.document_id;
 
   if (typeof user_id !== "string" || typeof document_id !== "string") {

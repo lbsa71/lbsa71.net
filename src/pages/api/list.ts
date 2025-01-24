@@ -43,7 +43,7 @@ export const listDocuments = async (user_id: string): Promise<ContentDocument[]>
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id: user_id } = req.query;
+  const { user_id } = req.query;
 
   if (typeof user_id !== "string") {
     return res.status(400).json({ error: "Invalid query parameters" });

@@ -17,7 +17,7 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   const putCommand = new PutCommand({
     TableName: "lbsa71_net",
     Item: {
-      user_id: user_id,
+      user_id,
       document_id,
       content,
       createdAt: now,

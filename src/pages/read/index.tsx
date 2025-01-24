@@ -12,15 +12,10 @@ import { fetchSiteByContext } from "@/lib/dynamodb";
 
 export async function getServerSideProps(context: ReqContext) {
   const site = await fetchSiteByContext(context);
-
-  console.log("site", JSON.stringify(site, null, 2));
-
   const { user_id } = site;
 
   const documents = (await listDocuments(user_id))?.map(wrapDocument);
 
-
-  console.log("documents", JSON.stringify(documents, null, 2));
   if (!documents || documents.length === 0) {
     return {
       redirect: {
@@ -57,7 +52,7 @@ const List = ({
   );
 
   const getPlaylistName = (doc: ContentDocument): string =>
-    playlists?.includes(doc.playlist || "") ? doc.playlist || "" : "Miscellaneous";
+    playlists?.includes(doc.playlist) ? doc.playlist : "Miscellaneous";
 
   documents.forEach((doc) => {
     const playlistName = getPlaylistName(doc);
