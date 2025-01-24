@@ -14,7 +14,7 @@ export type CreateDocumentRequest = {
 
 export type UpdateDocumentRequest = {
   user_id: string;
-  adminUserId: string;
+  admin_user_id: string;
   document_id: string;
   content: string;
   hero_img?: string;

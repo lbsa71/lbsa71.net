@@ -40,7 +40,7 @@ const EditList = ({ site }: { site: Site }) => {
   console.log("site", JSON.stringify(site, null, 2));
   console.log("user", JSON.stringify(user, null, 2));
 
-  if (typeof user_id !== "string" || !site || !user || user.sub !== site.adminUserId) {
+  if (typeof user_id !== "string" || !site || !user || user.sub !== site.admin_user_id) {
     return <div>Unauthorized</div>;
   }
 

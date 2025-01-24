@@ -32,7 +32,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
 
   const playListItems = documents
     .filter((doc) => doc.playlist === playlist)
-    .sort((a, b) => safe(a.ordinal).localeCompare(b.ordinal, undefined, {
+    .sort((a, b) => safe(a.ordinal).localeCompare(safe(b.ordinal), undefined, {
       numeric: true,
     }));
 

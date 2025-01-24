@@ -6,7 +6,7 @@ import { ApiResponse, UpdateDocumentRequest } from "@/types/api";
 import { wrapDocument } from "@/lib/wrapDocument";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, adminUserId, document_id, content, hero_img, media_item, playlist, ordinal } = req.body as UpdateDocumentRequest;
+  const { user_id, admin_user_id, document_id, content, hero_img, media_item, playlist, ordinal } = req.body as UpdateDocumentRequest;
 
   if (!user_id || !document_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });

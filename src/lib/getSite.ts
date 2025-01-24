@@ -13,27 +13,27 @@ export type Redirect = {
 export type Site = {
   title: string;
   user_id: string;
-  adminUserId: string;
+  admin_user_id: string;
   urls: string[];
   playlists: string[];
   feed?: string;
   theme: string;
-  mediaFolder: string;
+  media_folder: string;
   media_url: string;
   byline: string;
   banner?: string;
   redirect?: Redirect;
 };
 
-type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'adminUserId'>> & {
+type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'admin_user_id'>> & {
   user_id: string;
   urls: string[];
-  adminUserId: string;
+  admin_user_id: string;
 };
 
 export const wrap = (site: SiteConfig): Site => {
-  const mediaFolder = site.mediaFolder ?? site.user_id;
-  const media_url = `https://media.lbsa71.net/${mediaFolder}`;
+  const media_folder = site.media_folder ?? site.user_id;
+  const media_url = `https://media.lbsa71.net/${media_folder}`;
   const title = site.title ?? site.user_id;
   const byline = site.byline ?? "";
 
@@ -41,7 +41,7 @@ export const wrap = (site: SiteConfig): Site => {
     theme: "default",
     playlists: [],
     ...site,
-    mediaFolder,
+    media_folder,
     media_url,
     title,
     byline,

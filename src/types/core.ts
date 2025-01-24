@@ -42,12 +42,12 @@ type DocumentNode = TextNode | HeaderNode | ParagraphNode | TrackNode;
 type Site = RemoveUndefined<{
   title: string;
   user_id: string;
-  adminUserId: string;
+  admin_user_id: string;
   urls: string[];
   playlists: string[];
   feed?: string;
   theme: string;
-  mediaFolder: string;
+  media_folder: string;
   media_url: string;
   byline: string;
   banner?: string;
@@ -76,7 +76,7 @@ type ApiResponse<T> = {
   error?: string;
 };
 
-type RemoveUndefined<T> = {
+type RemoveUndefined<T> = T extends any[] ? T : {
   [P in keyof T as T[P] extends undefined ? never : P]: T[P] extends object ? RemoveUndefined<T[P]> : T[P]
 };
 
