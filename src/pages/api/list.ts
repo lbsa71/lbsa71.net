@@ -10,7 +10,6 @@ export const listDocuments = async (user_id: string): Promise<ContentDocument[]>
     return localDocuments;
   }
 
-  console.log("Querying DynamoDB with user_id:", user_id);
   const queryCommand = new QueryCommand({
     TableName: "lbsa71_net",
     KeyConditionExpression: "user_id = :uid",
@@ -18,8 +17,6 @@ export const listDocuments = async (user_id: string): Promise<ContentDocument[]>
       ":uid": user_id,
     },
   });
-
-  console.log("Query command:", JSON.stringify(queryCommand, null, 2));
 
   const data = await dynamoDb.send(queryCommand);
   if (!data.Items) return [];

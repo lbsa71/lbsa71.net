@@ -71,8 +71,8 @@ export function parseMarkdown(markdown: string): ParsedDocument {
       id: `track-${position}`,
       type: 'track',
       title: title.trim(),
-      artist: artist.trim() || undefined,
-      album: album.trim() || undefined,
+      artist: artist.trim(),
+      album: album?.trim(),
       position,
       media: []
     });

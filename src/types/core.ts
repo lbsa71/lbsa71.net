@@ -28,12 +28,16 @@ type ParagraphNode = RemoveUndefined<BaseNode & {
   hasTrack?: boolean;
 }>;
 
-type TrackNode = RemoveUndefined<BaseNode & {
+export type TrackInfo = {
+    title: string;
+    artist: string;
+    album?: string;
+    position: number;
+  };
+
+  
+type TrackNode = RemoveUndefined<BaseNode & TrackInfo & {
   type: 'track';
-  title: string;
-  artist?: string;
-  album?: string;
-  position: number;
   media?: MediaItem[];
 }>;
 

@@ -51,8 +51,14 @@ const List = ({
     (playlist) => ({ [playlist]: [] })
   );
 
-  const getPlaylistName = (doc: ContentDocument): string =>
-    playlists?.includes(doc.playlist) ? doc.playlist : "Miscellaneous";
+  const getPlaylistName = (doc: ContentDocument): string => {
+    if(typeof doc.playlist === 'string') {
+    return playlists?.includes(doc.playlist) ? doc.playlist : "Miscellaneous";
+    }
+    else {
+      return "Miscellaneous";
+    }
+  }
 
   documents.forEach((doc) => {
     const playlistName = getPlaylistName(doc);
