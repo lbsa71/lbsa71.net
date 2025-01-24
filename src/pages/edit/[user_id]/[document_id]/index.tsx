@@ -6,7 +6,12 @@ import getConfig from "next/config";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
-export const defaultDocument: ContentDocument = {
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+  const entries = Object.entries(obj).filter(([_, value]) => value !== undefined);
+  return Object.fromEntries(entries) as T;
+}
+
+export const defaultDocument = removeUndefined<ContentDocument>({
   document_id: "",
   user_id: "",
   title: "",
@@ -18,7 +23,7 @@ export const defaultDocument: ContentDocument = {
   nodes: [],
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-};
+});
 
 type APIContentDocument = {
   data: ContentDocument;

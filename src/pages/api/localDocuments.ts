@@ -1,8 +1,13 @@
 import { ContentDocument } from "@/types/core";
 
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+  const entries = Object.entries(obj).filter(([_, value]) => value !== undefined);
+  return Object.fromEntries(entries) as T;
+}
+
 const now = new Date().toISOString();
 
-export const localDocument: ContentDocument = {
+export const localDocument = removeUndefined<ContentDocument>({
   document_id: "local1",
   user_id: "local",
   content: "# HALLAS1",
@@ -14,9 +19,9 @@ export const localDocument: ContentDocument = {
   nodes: [],
   createdAt: now,
   updatedAt: now,
-};
+});
 
-const localDocument2: ContentDocument = {
+const localDocument2 = removeUndefined<ContentDocument>({
   document_id: "local2",
   user_id: "local",
   content: "# HALLAS2",
@@ -28,9 +33,9 @@ const localDocument2: ContentDocument = {
   nodes: [],
   createdAt: now,
   updatedAt: now,
-};
+});
 
-const localDocument3: ContentDocument = {
+const localDocument3 = removeUndefined<ContentDocument>({
   document_id: "local3",
   user_id: "local",
   content: "# HALLAS3",
@@ -42,9 +47,9 @@ const localDocument3: ContentDocument = {
   nodes: [],
   createdAt: now,
   updatedAt: now,
-};
+});
 
-const localDocument4: ContentDocument = {
+const localDocument4 = removeUndefined<ContentDocument>({
   document_id: "local4",
   user_id: "local",
   content: "# Mixes1",
@@ -56,9 +61,9 @@ const localDocument4: ContentDocument = {
   nodes: [],
   createdAt: now,
   updatedAt: now,
-};
+});
 
-const localDocument5: ContentDocument = {
+const localDocument5 = removeUndefined<ContentDocument>({
   document_id: "local5",
   user_id: "local",
   content: "# Mixes2",
@@ -70,7 +75,7 @@ const localDocument5: ContentDocument = {
   nodes: [],
   createdAt: now,
   updatedAt: now,
-};
+});
 
 export const localDocuments = [
   localDocument,

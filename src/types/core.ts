@@ -1,45 +1,45 @@
-type MediaItem = {
+type MediaItem = RemoveUndefined<{
   url: string;
   type: 'image' | 'audio' | 'video';
   alt?: string;
   title?: string;
-};
+}>;
 
-type BaseNode = {
+type BaseNode = RemoveUndefined<{
   id: string;
   type: string;
   position?: number;
-};
+}>;
 
-type TextNode = BaseNode & {
+type TextNode = RemoveUndefined<BaseNode & {
   type: 'text';
   content: string;
-};
+}>;
 
-type HeaderNode = BaseNode & {
+type HeaderNode = RemoveUndefined<BaseNode & {
   type: 'header';
   level: 1 | 2 | 3 | 4 | 5 | 6;
   content: string;
-};
+}>;
 
-type ParagraphNode = BaseNode & {
+type ParagraphNode = RemoveUndefined<BaseNode & {
   type: 'paragraph';
   content: string;
   hasTrack?: boolean;
-};
+}>;
 
-type TrackNode = BaseNode & {
+type TrackNode = RemoveUndefined<BaseNode & {
   type: 'track';
   title: string;
   artist?: string;
   album?: string;
   position: number;
   media?: MediaItem[];
-};
+}>;
 
 type DocumentNode = TextNode | HeaderNode | ParagraphNode | TrackNode;
 
-type Site = {
+type Site = RemoveUndefined<{
   title: string;
   user_id: string;
   adminUserId: string;
@@ -55,9 +55,9 @@ type Site = {
     destination: string;
     permanent: boolean;
   };
-};
+}>;
 
-type ContentDocument = {
+type ContentDocument = RemoveUndefined<{
   document_id: string;
   user_id: string;
   title: string;
@@ -69,11 +69,15 @@ type ContentDocument = {
   nodes: DocumentNode[];
   createdAt: string;
   updatedAt: string;
-};
+}>;
 
 type ApiResponse<T> = {
   data: T;
   error?: string;
+};
+
+type RemoveUndefined<T> = {
+  [P in keyof T as T[P] extends undefined ? never : P]: T[P] extends object ? RemoveUndefined<T[P]> : T[P]
 };
 
 export type {
@@ -86,5 +90,6 @@ export type {
   DocumentNode,
   Site,
   ContentDocument,
-  ApiResponse
+  ApiResponse,
+  RemoveUndefined
 }; 

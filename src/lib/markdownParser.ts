@@ -7,6 +7,11 @@ type ParsedDocument = {
   tracks: TrackNode[];
 };
 
+function removeUndefined<T extends Record<string, any>>(obj: T): T {
+  const entries = Object.entries(obj).filter(([_, value]) => value !== undefined);
+  return Object.fromEntries(entries) as T;
+}
+
 function parseInlineContent(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
   let currentText = '';
@@ -14,11 +19,11 @@ function parseInlineContent(text: string): InlineNode[] {
 
   while (position < text.length) {
     if (position < text.length) {
-      nodes.push({
+      nodes.push(removeUndefined<TextNode>({
         id: `text-${position}`,
         type: 'text',
         content: text.slice(position)
-      });
+      }));
       break;
     }
   }
@@ -38,16 +43,13 @@ export function parseMarkdown(markdown: string): ParsedDocument {
   function flushParagraph() {
     if (currentParagraph.length > 0) {
       const text = currentParagraph.join('\n');
-      const node : ParagraphNode = {
+      const node = removeUndefined<ParagraphNode>({
         id: `p-${nodes.length}`,
         type: 'paragraph',
         content: text,
-        hasTrack: hasCurrentTrack
-      }
-
-      if(currentPosition) {
-        node.position = currentPosition;
-      }
+        hasTrack: hasCurrentTrack || undefined,
+        position: currentPosition
+      });
 
       nodes.push(node);
 
@@ -65,15 +67,15 @@ export function parseMarkdown(markdown: string): ParsedDocument {
     const position = parseInt(positionStr, 10);
     if (isNaN(position)) return null;
 
-    return {
+    return removeUndefined<TrackNode>({
       id: `track-${position}`,
       type: 'track',
       title: title.trim(),
-      artist: artist.trim(),
+      artist: artist.trim() || undefined,
       album: album.trim() || undefined,
       position,
       media: []
-    };
+    });
   }
 
   for (const line of lines) {
@@ -108,12 +110,12 @@ export function parseMarkdown(markdown: string): ParsedDocument {
         }
       }
 
-      nodes.push({
+      nodes.push(removeUndefined<HeaderNode>({
         id: `h${level}-${nodes.length}`,
         type: 'header',
         level,
         content
-      });
+      }));
       continue;
     }
 
