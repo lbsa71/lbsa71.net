@@ -71,15 +71,15 @@ const MarkdownRenderer = ({
           <input
             type="text"
             placeholder="Hero image URL"
-            value={document.heroImage}
-            onChange={handleInputChange("heroImage")}
+            value={document.hero_img}
+            onChange={handleInputChange("hero_img")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input
             type="text"
             placeholder="Media Item URL"
-            value={document.mediaItem}
-            onChange={handleInputChange("mediaItem")}
+            value={document.media_item}
+            onChange={handleInputChange("media_item")}
             style={{ padding: "10px", width: "calc(50% - 5px)" }}
           />
           <input

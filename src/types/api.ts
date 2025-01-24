@@ -8,24 +8,24 @@ export type ApiResponse<T> = {
 
 export type CreateDocumentRequest = {
   user_id: string;
-  documentId?: string;
+  document_id?: string;
   content: string;
 };
 
 export type UpdateDocumentRequest = {
   user_id: string;
   adminUserId: string;
-  documentId: string;
+  document_id: string;
   content: string;
-  heroImage?: string;
-  mediaItem?: string;
+  hero_img?: string;
+  media_item?: string;
   playlist?: string;
   ordinal?: string;
 };
 
 export type DeleteDocumentRequest = {
   user_id: string;
-  documentId: string;
+  document_id: string;
 };
 
 export type User = {

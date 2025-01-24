@@ -6,7 +6,7 @@ import { ApiResponse, CreateDocumentRequest } from "@/types/api";
 import { wrapDocument } from "@/lib/wrapDocument";
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, documentId: document_id = new Date().toISOString(), content } = req.body as CreateDocumentRequest;
+  const { user_id, document_id = new Date().toISOString(), content } = req.body as CreateDocumentRequest;
 
   if (!user_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -18,7 +18,7 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
     TableName: "lbsa71_net",
     Item: {
       user_id: user_id,
-      document_id: document_id,
+      document_id,
       content,
       createdAt: now,
       updatedAt: now,

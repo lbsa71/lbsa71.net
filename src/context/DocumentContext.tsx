@@ -2,7 +2,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 
 type DocumentMetadata = {
   user_id: string;
-  documentId: string;
+  document_id: string;
 };
 
 type DocumentContextType = DocumentMetadata;

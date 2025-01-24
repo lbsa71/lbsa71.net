@@ -19,7 +19,7 @@ export type Site = {
   feed?: string;
   theme: string;
   mediaFolder: string;
-  mediaUrl: string;
+  media_url: string;
   byline: string;
   banner?: string;
   redirect?: Redirect;
@@ -33,7 +33,7 @@ type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'adminUserId'>> & {
 
 export const wrap = (site: SiteConfig): Site => {
   const mediaFolder = site.mediaFolder ?? site.user_id;
-  const mediaUrl = `https://media.lbsa71.net/${mediaFolder}`;
+  const media_url = `https://media.lbsa71.net/${mediaFolder}`;
   const title = site.title ?? site.user_id;
   const byline = site.byline ?? "";
 
@@ -42,7 +42,7 @@ export const wrap = (site: SiteConfig): Site => {
     playlists: [],
     ...site,
     mediaFolder,
-    mediaUrl,
+    media_url,
     title,
     byline,
   };

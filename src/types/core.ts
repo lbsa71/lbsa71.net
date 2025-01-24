@@ -48,7 +48,7 @@ type Site = RemoveUndefined<{
   feed?: string;
   theme: string;
   mediaFolder: string;
-  mediaUrl: string;
+  media_url: string;
   byline: string;
   banner?: string;
   redirect?: {
@@ -62,8 +62,8 @@ type ContentDocument = RemoveUndefined<{
   user_id: string;
   title: string;
   content: string;
-  heroImage?: string;
-  mediaItem?: string;
+  hero_img?: string;
+  media_item?: string;
   playlist?: string;
   ordinal?: string;
   nodes: DocumentNode[];

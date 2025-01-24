@@ -26,8 +26,8 @@ export type DBDocument = {
   user_id: string;
   content: string;
   title?: string;
-  heroImage?: string;
-  mediaItem?: string;
+  hero_img?: string;
+  media_item?: string;
   playlist?: string;
   ordinal?: string;
   createdAt?: string;

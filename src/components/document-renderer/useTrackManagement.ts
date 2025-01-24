@@ -5,7 +5,7 @@ import { ContentDocument, TrackNode } from '../../types/core';
 
 type UseTrackManagementProps = {
   content: string;
-  documentId: string;
+  document_id: string;
   playListItems: ContentDocument[];
   duration: number;
   currentTime: number;
@@ -21,7 +21,7 @@ type UseTrackManagementResult = {
 
 export const useTrackManagement = ({
   content,
-  documentId,
+  document_id,
   playListItems,
   duration,
   currentTime,

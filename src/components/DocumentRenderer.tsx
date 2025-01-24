@@ -27,8 +27,8 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
       (() => { throw new Error(`Document not found: ${document}`) })()
     : document;
 
-  const { document_id, user_id, content, heroImage, mediaItem, playlist } = contentDocument;
-  const { mediaUrl } = site;
+  const { document_id, user_id, content, hero_img, media_item, playlist } = contentDocument;
+  const { media_url } = site;
 
   const playListItems = documents
     .filter((doc) => doc.playlist === playlist)
@@ -40,7 +40,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
 
   const { currentTrack, tracks, onAudioEnd, onTrackChange } = useTrackManagement({
     content,
-    documentId: document_id,
+    document_id,
     playListItems,
     duration,
     currentTime,
@@ -56,16 +56,16 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   }, [currentTrack]);
 
   const parsedContent = parseMarkdown(content);
-  const mediaPanel = Boolean(mediaItem || heroImage || playlist);
+  const mediaPanel = Boolean(media_item || hero_img || playlist);
 
   return (
-    <DocumentProvider value={{ user_id, documentId: document_id }}>
+    <DocumentProvider value={{ user_id, document_id }}>
       <div className={styles["content-document-container"]}>
         {mediaPanel && (
           <MediaPanel
-            heroImage={heroImage}
-            mediaItem={mediaItem}
-            mediaUrl={mediaUrl}
+            hero_img={hero_img}
+            media_item={media_item}
+            media_url={media_url}
             playlist={playlist}
             currentTrack={currentTrack}
             playListItems={playListItems}
@@ -77,7 +77,7 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
         )}
         <DocumentPanel
           nodes={parsedContent.nodes}
-          mediaUrl={mediaUrl}
+          media_url={media_url}
           currentTrack={currentTrack}
           highlightedRef={highlightedRef}
         />

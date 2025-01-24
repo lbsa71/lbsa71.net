@@ -5,9 +5,9 @@ import { VercelRequest, VercelResponse } from "@vercel/node";
 import { ApiResponse, DeleteDocumentRequest } from "@/types/api";
 
 const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, documentId } = req.body as DeleteDocumentRequest;
+  const { user_id, document_id } = req.body as DeleteDocumentRequest;
 
-  if (!user_id || !documentId) {
+  if (!user_id || !document_id) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -15,7 +15,7 @@ const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
     TableName: "lbsa71_net",
     Key: {
       user_id: user_id,
-      document_id: documentId,
+      document_id,
     },
   });
 

@@ -16,8 +16,8 @@ export const defaultDocument = removeUndefined<ContentDocument>({
   user_id: "",
   title: "",
   content: "",
-  heroImage: "",
-  mediaItem: "",
+  hero_img: "",
+  media_item: "",
   playlist: "",
   ordinal: "",
   nodes: [],
@@ -31,12 +31,12 @@ type APIContentDocument = {
 
 const fetchDocument = (
   user_id: string,
-  documentId: string,
+  document_id: string,
   setDocument: React.Dispatch<React.SetStateAction<ContentDocument>>
 ) => {
   axios
     .get<any, APIContentDocument>(
-      `/api/read?user_id=${user_id}&document_id=${documentId}`
+      `/api/read?user_id=${user_id}&document_id=${document_id}`
     )
     .then((response) => {
       const document = response.data;
@@ -46,7 +46,7 @@ const fetchDocument = (
       setDocument({
         ...defaultDocument,
         user_id,
-        document_id: documentId,
+        document_id,
       });
       return console.error("Failed to fetch document", error);
     });

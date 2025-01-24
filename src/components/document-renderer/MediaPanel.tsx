@@ -5,9 +5,9 @@ import { Slideshow } from "../Slideshow";
 import { ContentDocument, TrackNode, MediaItem as MediaItemType } from "../../types/core";
 
 type MediaPanelProps = {
-  heroImage?: string;
-  mediaItem?: string;
-  mediaUrl: string;
+  hero_img?: string;
+  media_item?: string;
+  media_url: string;
   playlist?: string;
   currentTrack: TrackNode | null;
   playListItems: ContentDocument[];
@@ -21,9 +21,9 @@ const hasMedia = (track: TrackNode | null): track is TrackNode & { media: MediaI
   Boolean(track?.media && track.media.length > 0);
 
 export const MediaPanel = ({
-  heroImage,
-  mediaItem,
-  mediaUrl,
+  hero_img,
+  media_item,
+  media_url,
   playlist,
   currentTrack,
   playListItems,
@@ -32,9 +32,9 @@ export const MediaPanel = ({
   onAudioEnd,
   onTrackChange,
 }: MediaPanelProps) => {
-  const heroHref = heroImage?.startsWith("http") 
-    ? heroImage 
-    : heroImage ? `${mediaUrl}/${heroImage}` 
+  const heroHref = hero_img?.startsWith("http") 
+    ? hero_img 
+    : hero_img ? `${media_url}/${hero_img}` 
     : undefined;
 
   return (
@@ -43,16 +43,16 @@ export const MediaPanel = ({
         <div className={styles["media-image"]}>
           <MediaItem
             href={heroHref}
-            mediaUrl={mediaUrl}
+            media_url={media_url}
             className={styles["media-image"]}
           />
         </div>
       )}
-      {mediaItem && (
+      {media_item && (
         <div className={styles["media-container"]}>
           <MediaItem
-            href={mediaItem}
-            mediaUrl={mediaUrl}
+            href={media_item}
+            media_url={media_url}
             onEnded={onAudioEnd}
             play={Boolean(play)}
             trackData={tracks}
@@ -64,7 +64,7 @@ export const MediaPanel = ({
         <div className={styles["slideshow-container"]}>
           <Slideshow 
             images={currentTrack.media}
-            mediaUrl={mediaUrl}
+            media_url={media_url}
           />
         </div>
       )}

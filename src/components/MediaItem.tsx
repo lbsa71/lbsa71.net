@@ -3,7 +3,7 @@ import { TrackNode } from "../types/core";
 
 type MediaItemProps = {
   href: string;
-  mediaUrl: string;
+  media_url: string;
   className?: string;
   onEnded?: () => void;
   play?: boolean;
@@ -13,7 +13,7 @@ type MediaItemProps = {
 
 const MediaItem = ({
   href,
-  mediaUrl,
+  media_url,
   className,
   onEnded,
   play,
@@ -28,7 +28,7 @@ const MediaItem = ({
     }
   }, [play]);
 
-  const fullUrl = href.startsWith("http") ? href : `${mediaUrl}/${href}`;
+  const fullUrl = href.startsWith("http") ? href : `${media_url}/${href}`;
   const isAudio = fullUrl.match(/\.(mp3|wav|m4a)$/i);
   const isVideo = fullUrl.match(/\.(mp4|webm|ogg)$/i);
 

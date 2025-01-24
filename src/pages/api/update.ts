@@ -6,9 +6,9 @@ import { ApiResponse, UpdateDocumentRequest } from "@/types/api";
 import { wrapDocument } from "@/lib/wrapDocument";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, adminUserId, documentId, content, heroImage, mediaItem, playlist, ordinal } = req.body as UpdateDocumentRequest;
+  const { user_id, adminUserId, document_id, content, hero_img, media_item, playlist, ordinal } = req.body as UpdateDocumentRequest;
 
-  if (!user_id || !documentId || !content) {
+  if (!user_id || !document_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -18,14 +18,14 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
     TableName: "lbsa71_net",
     Key: {
       user_id: user_id,
-      document_id: documentId,
+      document_id,
     },
     UpdateExpression:
-      "SET content = :content, hero_img = :heroImage, media_item = :mediaItem, playlist = :playlist, ordinal = :ordinal, updatedAt = :updatedAt",
+      "SET content = :content, hero_img = :hero_img, media_item = :media_item, playlist = :playlist, ordinal = :ordinal, updatedAt = :updatedAt",
     ExpressionAttributeValues: {
       ":content": content,
-      ":heroImage": heroImage || null,
-      ":mediaItem": mediaItem || null,
+      ":hero_img": hero_img || null,
+      ":media_item": media_item || null,
       ":playlist": playlist || null,
       ":ordinal": ordinal || null,
       ":updatedAt": now,

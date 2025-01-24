@@ -4,10 +4,10 @@ import { MediaItem } from "../types/core";
 
 type SlideshowProps = {
   images: MediaItem[];
-  mediaUrl: string;
+  media_url: string;
 };
 
-export const Slideshow = ({ images, mediaUrl }: SlideshowProps) => {
+export const Slideshow = ({ images, media_url }: SlideshowProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
 
@@ -32,7 +32,7 @@ export const Slideshow = ({ images, mediaUrl }: SlideshowProps) => {
   const currentImage = images[currentIndex];
   const imageUrl = currentImage.url.startsWith("http") 
     ? currentImage.url 
-    : `${mediaUrl}/${currentImage.url}`;
+    : `${media_url}/${currentImage.url}`;
 
   return (
     <div className={styles.slideshow}>

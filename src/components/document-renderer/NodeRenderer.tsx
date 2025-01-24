@@ -5,7 +5,7 @@ import { DocumentNode, TrackNode } from "../../types/core";
 
 type NodeRendererProps = {
   node: DocumentNode;
-  mediaUrl: string;
+  media_url: string;
   currentTrack: TrackNode | null;
   highlightedRef: RefObject<HTMLParagraphElement>;
 };
@@ -33,7 +33,7 @@ const renderChildren = (props: NodeRendererProps) => {
 
 export const NodeRenderer = ({
   node,
-  mediaUrl,
+  media_url,
   currentTrack,
   highlightedRef,
 }: NodeRendererProps) => {

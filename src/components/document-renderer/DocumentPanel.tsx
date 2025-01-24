@@ -5,14 +5,14 @@ import { NodeRenderer } from "./NodeRenderer";
 
 type DocumentPanelProps = {
   nodes: DocumentNode[];
-  mediaUrl: string;
+  media_url: string;
   currentTrack: TrackNode | null;
   highlightedRef: RefObject<HTMLParagraphElement>;
 };
 
 export const DocumentPanel = ({
   nodes,
-  mediaUrl,
+  media_url,
   currentTrack,
   highlightedRef,
 }: DocumentPanelProps) => (
@@ -22,7 +22,7 @@ export const DocumentPanel = ({
         <NodeRenderer
           key={index}
           node={node}
-          mediaUrl={mediaUrl}
+          media_url={media_url}
           currentTrack={currentTrack}
           highlightedRef={highlightedRef}
         />
