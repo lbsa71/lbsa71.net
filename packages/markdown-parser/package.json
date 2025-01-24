@@ -1,0 +1,22 @@
+{
+  "name": "@lbsa71/markdown-parser",
+  "version": "0.1.0",
+  "description": "A flexible markdown parser with customizable node definitions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "keywords": ["markdown", "parser", "state-machine"],
+  "author": "Stefan Andersen",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5"
+  }
+} 
