@@ -195,4 +195,81 @@ describe('parseMarkdown', () => {
       expect(result.nodes).toHaveLength(2);
     });
   });
+
+  describe('complex production cases', () => {
+    it('should parse a full mix post with title, links, and track sections', () => {
+      const input = `# Science/Fiction 4.0
+Concept and Live mixing: [lbsa71](https://soundcloud.com/lbsa71)
+Track Selection, Story, Code: lbsa71, [Claude](https://claude.ai/) and [ChatGPT](https://openai.com/)
+Images: ChatGPT
+
+#### Pursuit - Gesaffelstein [0]
+![Image 1](https://media.lbsa71.net/users/st_ephan/sf4/pursuit.webp)
+Humanity's an addict, and progress is our drug of choice.
+
+#### Lenka - T.Raumschmiere [225]
+![Image 2](https://media.lbsa71.net/users/st_ephan/sf4/lenka.webp)
+The day we fired up the 150th-something version of the model.`;
+
+      const result = parseMarkdown(input);
+
+      expect(result.nodes[0]).toEqual({
+        type: 'header',
+        level: 1,
+        children: [{ type: 'text', value: 'Science/Fiction 4.0' }]
+      });
+
+      expect(result.tracks).toHaveLength(2);
+      expect(result.tracks[0]).toEqual({
+        type: 'track_info',
+        title: 'Pursuit',
+        artist: 'Gesaffelstein',
+        position: 0,
+        images: [{
+          type: 'image',
+          src: 'https://media.lbsa71.net/users/st_ephan/sf4/pursuit.webp',
+          alt: 'Image 1',
+          position: 0
+        }]
+      });
+
+      expect(result.tracks[1]).toEqual({
+        type: 'track_info',
+        title: 'Lenka',
+        artist: 'T.Raumschmiere',
+        position: 225,
+        images: [{
+          type: 'image',
+          src: 'https://media.lbsa71.net/users/st_ephan/sf4/lenka.webp',
+          alt: 'Image 2',
+          position: 225
+        }]
+      });
+
+      const paragraphsWithTracks = result.nodes.filter(
+        n => n.type === 'paragraph' && n.hasTrack
+      );
+      expect(paragraphsWithTracks).toHaveLength(2);
+      
+      expect(paragraphsWithTracks[0]).toEqual({
+        type: 'paragraph',
+        hasTrack: true,
+        position: 0,
+        children: [{
+          type: 'text',
+          value: "Humanity's an addict, and progress is our drug of choice."
+        }]
+      });
+
+      expect(paragraphsWithTracks[1]).toEqual({
+        type: 'paragraph',
+        hasTrack: true,
+        position: 225,
+        children: [{
+          type: 'text',
+          value: "The day we fired up the 150th-something version of the model."
+        }]
+      });
+    });
+  });
 }); 
