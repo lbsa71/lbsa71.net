@@ -1,21 +1,33 @@
-import { ParserOptions, BlockNode, InlineNode, Node, NodeType, Position, Visitor, BlockNodeType } from './types';
+import { ParserOptions, BlockNode, InlineNode, Node, NodeType, Position, Visitor, BlockNodeType, HeaderLevel } from './types';
 
 export class MarkdownParser {
   private pos: Position;
+  private currentLine = 1;
 
   constructor(private options: ParserOptions = {}) {
-    this.pos = { line: 1, column: 1, offset: 0 };
+    this.pos = { line: 1, column: 1 };
   }
 
-  private createNode<T extends Node>(type: NodeType, content: string, raw: string, metadata = {}, children: (BlockNode | InlineNode)[] = []): T {
-    return {
+  private createNode(type: NodeType, content: string, raw: string, children?: (BlockNode | InlineNode)[]): Node {
+    const node: Node = {
       type,
       content,
       raw,
-      position: { ...this.pos },
-      metadata,
-      ...(this.isBlockType(type) ? { children } : {}),
-    } as T;
+      position: {
+        line: this.currentLine,
+        column: 1
+      }
+    };
+
+    if (children) {
+      return {
+        ...node,
+        type: type as BlockNodeType,
+        children
+      } as BlockNode;
+    }
+
+    return node;
   }
 
   private isBlockType(type: NodeType): type is BlockNodeType {
@@ -38,248 +50,254 @@ export class MarkdownParser {
     this.pos.line = line;
   }
 
-  private mergeTextNodes(nodes: InlineNode[]): InlineNode[] {
-    const merged: InlineNode[] = [];
-    let currentText = '';
-    let currentRaw = '';
-
-    for (const node of nodes) {
-      if (node.type === 'text') {
-        currentText += node.content;
-        currentRaw += node.raw;
-      } else {
-        if (currentText) {
-          merged.push(this.createNode('text', currentText, currentRaw));
-          currentText = '';
-          currentRaw = '';
-        }
-        merged.push(node);
-      }
-    }
-
-    if (currentText) {
-      merged.push(this.createNode('text', currentText, currentRaw));
-    }
-
-    return merged;
+  private mergeTextNodes(nodes: BlockNode[]): BlockNode[] {
+    return nodes;
   }
 
   private parseInlineElements(text: string): InlineNode[] {
     const nodes: InlineNode[] = [];
     let pos = 0;
-    let start = 0;
-    const len = text.length;
 
-    const pushText = (end: number) => {
-      if (end > start) {
-        const content = text.slice(start, end);
-        if (content) {
-          nodes.push(this.createNode('text', content, content));
-        }
-      }
-    };
+    while (pos < text.length) {
+      const char = text[pos];
 
-    while (pos < len) {
-      // Bold
-      if (text.startsWith('**', pos) || text.startsWith('__', pos)) {
-        const marker = text.substr(pos, 2);
-        const endPos = text.indexOf(marker, pos + 2);
+      if (char === '*' || char === '_') {
+        const isDouble = text[pos + 1] === char;
+        const type = isDouble ? 'bold' : 'italic';
+        const length = isDouble ? 2 : 1;
+        const endPos = text.indexOf(char.repeat(length), pos + length);
+
         if (endPos !== -1) {
-          pushText(pos);
-          const content = text.slice(pos + 2, endPos);
-          nodes.push(this.createNode('bold', content, text.slice(pos, endPos + 2)));
-          pos = endPos + 2;
-          start = pos;
+          const content = text.slice(pos + length, endPos);
+          const children = this.parseInlineElements(content);
+          const node = this.createNode(type, content, text.slice(pos, endPos + length), children);
+          nodes.push(node as InlineNode);
+          pos = endPos + length;
           continue;
         }
       }
 
-      // Italic
-      if ((text[pos] === '*' || text[pos] === '_') && text[pos - 1] !== text[pos]) {
-        const marker = text[pos];
-        const endPos = text.indexOf(marker, pos + 1);
-        if (endPos !== -1 && text[endPos - 1] !== '\\') {
-          pushText(pos);
-          const content = text.slice(pos + 1, endPos);
-          nodes.push(this.createNode('italic', content, text.slice(pos, endPos + 1)));
-          pos = endPos + 1;
-          start = pos;
-          continue;
+      if (char === '[') {
+        const endBracket = text.indexOf(']', pos);
+        if (endBracket !== -1) {
+          const nextChar = text[endBracket + 1];
+          if (nextChar === '(') {
+            const endParen = text.indexOf(')', endBracket + 2);
+            if (endParen !== -1) {
+              const content = text.slice(pos + 1, endBracket);
+              const url = text.slice(endBracket + 2, endParen);
+              const node = this.createNode('link', content, text.slice(pos, endParen + 1));
+              node.metadata = { url };
+              nodes.push(node as InlineNode);
+              pos = endParen + 1;
+              continue;
+            }
+          }
         }
       }
 
-      // Inline code
-      if (text[pos] === '`') {
+      if (char === '`') {
         const endPos = text.indexOf('`', pos + 1);
         if (endPos !== -1) {
-          pushText(pos);
           const content = text.slice(pos + 1, endPos);
-          nodes.push(this.createNode('code', content, text.slice(pos, endPos + 1)));
+          const node = this.createNode('code', content, text.slice(pos, endPos + 1));
+          nodes.push(node as InlineNode);
           pos = endPos + 1;
-          start = pos;
           continue;
         }
       }
 
-      // Links
-      if (text[pos] === '[') {
-        const titleEnd = text.indexOf(']', pos);
-        const linkStart = titleEnd !== -1 ? text.indexOf('(', titleEnd) : -1;
-        const linkEnd = linkStart !== -1 ? text.indexOf(')', linkStart) : -1;
-        
-        if (titleEnd !== -1 && linkStart !== -1 && linkEnd !== -1) {
-          pushText(pos);
-          const title = text.slice(pos + 1, titleEnd);
-          const href = text.slice(linkStart + 1, linkEnd);
-          
-          // Extract optional title from href
-          const hrefParts = href.match(/^([^"]+)(?:\s+"([^"]+)")?$/);
-          const metadata = hrefParts
-            ? { href: hrefParts[1], title: hrefParts[2] }
-            : { href };
-          
-          nodes.push(this.createNode('link', title, text.slice(pos, linkEnd + 1), metadata));
-          pos = linkEnd + 1;
-          start = pos;
-          continue;
-        }
+      // If no special character is found, treat as text
+      let textEnd = pos + 1;
+      while (textEnd < text.length && !'*_[`'.includes(text[textEnd])) {
+        textEnd++;
       }
-
-      // Images
-      if (text[pos] === '!' && text[pos + 1] === '[') {
-        let bracketCount = 1;
-        let altEnd = pos + 2;
-        
-        while (altEnd < len && bracketCount > 0) {
-          if (text[altEnd] === '[') {
-            bracketCount++;
-          } else if (text[altEnd] === ']') {
-            bracketCount--;
-          }
-          altEnd++;
-        }
-        
-        const srcStart = text.indexOf('(', altEnd - 1);
-        const srcEnd = srcStart !== -1 ? text.indexOf(')', srcStart) : -1;
-        
-        if (altEnd > pos + 2 && srcStart !== -1 && srcEnd !== -1) {
-          pushText(pos);
-          const alt = text.slice(pos + 2, altEnd - 1);
-          const src = text.slice(srcStart + 1, srcEnd);
-          
-          nodes.push(this.createNode('image', '', text.slice(pos, srcEnd + 1), { src, alt }));
-          pos = srcEnd + 1;
-          start = pos;
-          continue;
-        }
-      }
-
-      // Citations
-      if (text[pos] === '[' && /^\[\d+\]/.test(text.slice(pos))) {
-        const end = text.indexOf(']', pos);
-        if (end !== -1) {
-          pushText(pos);
-          const cite = text.slice(pos + 1, end);
-          nodes.push(this.createNode('citation', cite, text.slice(pos, end + 1), { cite }));
-          pos = end + 1;
-          start = pos;
-          continue;
-        }
-      }
-
-      pos++;
-    }
-
-    pushText(pos);
-    return this.mergeTextNodes(nodes);
-  }
-
-  private parseBlockElements(lines: string[]): BlockNode[] {
-    const nodes: BlockNode[] = [];
-    let pos = 0;
-    
-    while (pos < lines.length) {
-      const line = lines[pos];
-      this.updatePosition(pos + 1);
-      
-      // Headers
-      const headerMatch = line.match(/^(#{1,6})\s(.+)$/);
-      if (headerMatch) {
-        const level = headerMatch[1].length;
-        const content = headerMatch[2];
-        const children = this.parseInlineElements(content);
-        const node = this.createNode<BlockNode>(`header${level}` as NodeType, content, line, { level }, children);
-        nodes.push(node);
-        pos++;
-        continue;
-      }
-
-      // Blockquotes
-      if (line.startsWith('> ')) {
-        let content = line.slice(2);
-        let currentPos = pos + 1;
-        let blockLines = [content];
-        
-        while (currentPos < lines.length && lines[currentPos].startsWith('> ')) {
-          blockLines.push(lines[currentPos].slice(2));
-          currentPos++;
-        }
-        
-        content = blockLines.join('\n');
-        const children = this.parseInlineElements(content);
-        const node = this.createNode<BlockNode>('blockquote', content, lines.slice(pos, currentPos).join('\n'), {}, children);
-        nodes.push(node);
-        pos = currentPos;
-        continue;
-      }
-
-      // Code blocks
-      if (line.startsWith('```')) {
-        const language = line.slice(3).trim();
-        let content = '';
-        let currentPos = pos + 1;
-        
-        while (currentPos < lines.length && !lines[currentPos].startsWith('```')) {
-          content += (content ? '\n' : '') + lines[currentPos];
-          currentPos++;
-        }
-        
-        if (currentPos < lines.length) {
-          const node = this.createNode<BlockNode>('codeBlock', content, lines.slice(pos, currentPos + 1).join('\n'), { language });
-          nodes.push(node);
-          pos = currentPos + 1;
-          continue;
-        }
-      }
-
-      // Horizontal rules
-      if (line.match(/^---+$/)) {
-        nodes.push(this.createNode<BlockNode>('horizontalRule', '', line));
-        pos++;
-        continue;
-      }
-
-      // Regular paragraph
-      if (line.trim()) {
-        const content = line;
-        const children = this.parseInlineElements(content);
-        const node = this.createNode<BlockNode>('paragraph', content, line, {}, children);
-        nodes.push(node);
-      }
-      pos++;
+      const content = text.slice(pos, textEnd);
+      const node = this.createNode('text', content, content);
+      nodes.push(node as InlineNode);
+      pos = textEnd;
     }
 
     return nodes;
   }
 
+  private parseList(lines: string[], startIndex: number): [BlockNode, number] {
+    const listItems: { indent: number; content: string; }[] = [];
+    let currentIndex = startIndex;
+    let baseIndent = -1;
+
+    while (currentIndex < lines.length) {
+      const line = lines[currentIndex];
+      const listMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
+      const orderedListMatch = line.match(/^(\s*)\d+\.\s+(.+)$/);
+      
+      if (!listMatch && !orderedListMatch) {
+        if (line.trim() === '') {
+          currentIndex++;
+          continue;
+        }
+        break;
+      }
+
+      const match = listMatch || orderedListMatch;
+      const [, indent, content] = match!;
+      
+      if (baseIndent === -1) {
+        baseIndent = indent.length;
+      }
+
+      listItems.push({ indent: indent.length - baseIndent, content });
+      currentIndex++;
+    }
+
+    const createListItems = (items: typeof listItems, level: number = 0): BlockNode[] => {
+      const result: BlockNode[] = [];
+      let i = 0;
+
+      while (i < items.length) {
+        const item = items[i];
+        if (item.indent === level) {
+          const children: (BlockNode | InlineNode)[] = [];
+          let j = i + 1;
+          
+          // Parse inline elements for the current item
+          children.push(...this.parseInlineElements(item.content));
+          
+          // Collect nested items
+          while (j < items.length && items[j].indent > level) {
+            j++;
+          }
+          
+          if (j > i + 1) {
+            // We have nested items
+            children.push(this.createNode('list', '', '', createListItems(items.slice(i + 1, j), level + 2)) as BlockNode);
+          }
+
+          const listItemNode = this.createNode('listItem', item.content, item.content, children) as BlockNode;
+          result.push(listItemNode);
+          i = j;
+        } else {
+          i++;
+        }
+      }
+
+      return result;
+    };
+
+    const listType = lines[startIndex].trim().startsWith('-') ? 'unordered' : 'ordered';
+    const listNode = this.createNode('list', '', '', createListItems(listItems)) as BlockNode;
+    listNode.metadata = { listType };
+
+    return [listNode, currentIndex - 1];
+  }
+
+  private parseHeader(lines: string[], startIndex: number): [BlockNode, number] {
+    const line = lines[startIndex];
+    const headerMatch = line.match(/^(#{1,6})\s(.+)$/);
+    if (!headerMatch) {
+      throw new Error('Invalid header line');
+    }
+
+    const level = headerMatch[1].length as HeaderLevel;
+    const content = headerMatch[2];
+    const children = this.parseInlineElements(content);
+    const node = this.createNode(`header${level}` as NodeType, content, line, children) as BlockNode;
+    node.metadata = { level };
+
+    return [node, startIndex];
+  }
+
+  private parseBlockquote(lines: string[], startIndex: number): [BlockNode, number] {
+    let content = lines[startIndex].slice(2);
+    let currentIndex = startIndex + 1;
+    let blockLines = [content];
+    
+    while (currentIndex < lines.length && lines[currentIndex].startsWith('> ')) {
+      blockLines.push(lines[currentIndex].slice(2));
+      currentIndex++;
+    }
+    
+    content = blockLines.join('\n');
+    const children = this.parseInlineElements(content);
+    const node = this.createNode('blockquote', content, lines.slice(startIndex, currentIndex).join('\n'), children) as BlockNode;
+    
+    return [node, currentIndex - 1];
+  }
+
+  private parseCodeBlock(lines: string[], startIndex: number): [BlockNode, number] {
+    const language = lines[startIndex].slice(3).trim();
+    let content = '';
+    let currentIndex = startIndex + 1;
+    
+    while (currentIndex < lines.length && !lines[currentIndex].startsWith('```')) {
+      content += (content ? '\n' : '') + lines[currentIndex];
+      currentIndex++;
+    }
+    
+    if (currentIndex < lines.length) {
+      const node = this.createNode('codeBlock', content, lines.slice(startIndex, currentIndex + 1).join('\n')) as BlockNode;
+      node.metadata = { language };
+      return [node, currentIndex];
+    }
+    
+    throw new Error('Unclosed code block');
+  }
+
+  private parseParagraph(lines: string[], startIndex: number): [BlockNode, number] {
+    const content = lines[startIndex];
+    const children = this.parseInlineElements(content);
+    const node = this.createNode('paragraph', content, lines[startIndex], children) as BlockNode;
+    return [node, startIndex];
+  }
+
+  private parseBlockElements(lines: string[]): BlockNode[] {
+    const nodes: BlockNode[] = [];
+    let i = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmedLine = line.trim();
+
+      if (trimmedLine === '') {
+        i++;
+        continue;
+      }
+
+      if (trimmedLine.startsWith('#')) {
+        const [node, nextIndex] = this.parseHeader(lines, i);
+        nodes.push(node);
+        i = nextIndex + 1;
+      } else if (trimmedLine.startsWith('>')) {
+        const [node, nextIndex] = this.parseBlockquote(lines, i);
+        nodes.push(node);
+        i = nextIndex + 1;
+      } else if (trimmedLine.startsWith('```')) {
+        const [node, nextIndex] = this.parseCodeBlock(lines, i);
+        nodes.push(node);
+        i = nextIndex + 1;
+      } else if (trimmedLine.match(/^[-*+]\s+/) || trimmedLine.match(/^\d+\.\s+/)) {
+        const [node, nextIndex] = this.parseList(lines, i);
+        nodes.push(node);
+        i = nextIndex + 1;
+      } else {
+        const [node, nextIndex] = this.parseParagraph(lines, i);
+        nodes.push(node);
+        i = nextIndex + 1;
+      }
+    }
+
+    return this.mergeTextNodes(nodes);
+  }
+
   parse(input: string): BlockNode {
     const lines = input.split('\n');
-    const children = this.parseBlockElements(lines);
-    return this.createNode<BlockNode>('document', input, input, {}, children);
+    const nodes = this.parseBlockElements(lines);
+    const documentNode = this.createNode('document', input, input, nodes) as BlockNode;
+    return documentNode;
   }
 
   public visit(node: Node, visitor: Visitor) {
-    visitor(node.type);
+    visitor(node);
 
     if (this.isBlockType(node.type)) {
       const blockNode = node as BlockNode;

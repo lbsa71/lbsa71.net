@@ -2,10 +2,15 @@ import { MarkdownParser, Node, NodeType, BlockNode, InlineNode } from '../../src
 
 export class HtmlRenderer {
   private result: string[] = [];
-  private inlineResult: string[] = [];
   private isInline = false;
+  private inlineResult: string[] = [];
 
-  constructor(private parser: MarkdownParser = new MarkdownParser()) {}
+  constructor() {}
+
+  render(node: BlockNode): string {
+    this.renderNode(node);
+    return this.result.join('');
+  }
 
   private escape(text: string): string {
     return text
@@ -22,16 +27,6 @@ export class HtmlRenderer {
         this.renderChildren(node as BlockNode);
         break;
 
-      case 'header1':
-      case 'header2':
-      case 'header3':
-      case 'header4':
-      case 'header5':
-      case 'header6':
-        const level = node.type.slice(-1);
-        this.result.push(`<h${level}>${node.content}</h${level}>`);
-        break;
-
       case 'paragraph':
         this.isInline = true;
         this.inlineResult = [];
@@ -44,17 +39,36 @@ export class HtmlRenderer {
         this.isInline = true;
         this.inlineResult = [];
         this.renderChildren(node as BlockNode);
-        this.result.push(`<blockquote>${node.content}</blockquote>`);
+        this.result.push(`<blockquote>${this.inlineResult.join('')}</blockquote>`);
         this.isInline = false;
         break;
 
-      case 'codeBlock':
-        const language = node.metadata?.language;
-        this.result.push(`<pre><code${language ? ` class="language-${language}"` : ''}>${this.escape(node.content)}</code></pre>`);
+      case 'list':
+        const listType = node.metadata?.listType === 'ordered' ? 'ol' : 'ul';
+        this.result.push(`<${listType}>`);
+        this.renderChildren(node as BlockNode);
+        this.result.push(`</${listType}>`);
         break;
 
-      case 'horizontalRule':
-        this.result.push('<hr>');
+      case 'listItem':
+        this.result.push('<li>');
+        for (const child of (node as BlockNode).children) {
+          if (child.type === 'list') {
+            this.renderNode(child);
+          } else {
+            this.isInline = true;
+            this.inlineResult = [];
+            this.renderNode(child);
+            this.result.push(this.inlineResult.join(''));
+            this.isInline = false;
+          }
+        }
+        this.result.push('</li>');
+        break;
+
+      case 'codeBlock':
+        const language = node.metadata?.language || '';
+        this.result.push(`<pre><code class="language-${language}">${this.escape(node.content)}</code></pre>`);
         break;
 
       case 'text':
@@ -62,46 +76,61 @@ export class HtmlRenderer {
         break;
 
       case 'bold':
-        this.inlineResult.push(`<strong>${this.escape(node.content)}</strong>`);
+        this.isInline = true;
+        this.inlineResult = [];
+        this.renderChildren(node as BlockNode);
+        this.inlineResult.push(`<strong>${this.inlineResult.join('')}</strong>`);
+        this.isInline = false;
         break;
 
       case 'italic':
-        this.inlineResult.push(`<em>${this.escape(node.content)}</em>`);
+        this.isInline = true;
+        this.inlineResult = [];
+        this.renderChildren(node as BlockNode);
+        this.inlineResult.push(`<em>${this.inlineResult.join('')}</em>`);
+        this.isInline = false;
+        break;
+
+      case 'link':
+        const url = node.metadata?.url || '';
+        const title = node.metadata?.title ? ` title="${this.escape(node.metadata.title)}"` : '';
+        this.inlineResult.push(`<a href="${url}"${title}>${this.escape(node.content)}</a>`);
+        break;
+
+      case 'image':
+        const src = node.metadata?.url || '';
+        const alt = node.metadata?.alt || '';
+        const imgTitle = node.metadata?.title ? ` title="${this.escape(node.metadata.title)}"` : '';
+        this.inlineResult.push(`<img src="${src}" alt="${alt}"${imgTitle}>`);
         break;
 
       case 'code':
         this.inlineResult.push(`<code>${this.escape(node.content)}</code>`);
         break;
 
-      case 'link':
-        const href = this.escape(node.metadata?.href || '');
-        const title = node.metadata?.title ? ` title="${this.escape(node.metadata.title)}"` : '';
-        this.inlineResult.push(`<a href="${href}"${title}>${this.escape(node.content)}</a>`);
-        break;
-
-      case 'image':
-        const src = this.escape(node.metadata?.src || '');
-        const alt = this.escape(node.metadata?.alt || '');
-        this.inlineResult.push(`<img src="${src}" alt="${alt}">`);
-        break;
-
       case 'citation':
-        const cite = this.escape(node.metadata?.cite || '');
-        this.inlineResult.push(`<cite>[${cite}]</cite>`);
+        const cite = node.metadata?.url || '';
+        this.inlineResult.push(`<cite cite="${cite}">${this.escape(node.content)}</cite>`);
+        break;
+
+      default:
+        if (node.type.startsWith('header')) {
+          const level = node.metadata?.level || 1;
+          this.isInline = true;
+          this.inlineResult = [];
+          this.renderChildren(node as BlockNode);
+          this.result.push(`<h${level}>${this.inlineResult.join('')}</h${level}>`);
+          this.isInline = false;
+        }
         break;
     }
   }
 
   private renderChildren(node: BlockNode): void {
-    for (const child of node.children) {
-      this.renderNode(child);
+    if (node.children) {
+      for (const child of node.children) {
+        this.renderNode(child);
+      }
     }
-  }
-
-  render(input: string): string {
-    const ast = this.parser.parse(input);
-    this.result = [];
-    this.renderNode(ast);
-    return this.result.join('\n');
   }
 } 
