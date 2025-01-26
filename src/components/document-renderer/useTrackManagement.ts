@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { parseMarkdown } from '../../lib/markdownParser';
+import { parseMarkdown } from '../../lib/newMarkDownParser';
 import { TrackInfo } from './types';
 import { useRouter } from 'next/router';
 import { ContentDocument } from '../../lib/getSite';

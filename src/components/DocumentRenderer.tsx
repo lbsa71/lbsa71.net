@@ -5,7 +5,7 @@ import { DocumentProvider } from "../context/DocumentContext";
 import { useRouter } from "next/router";
 import { safe } from "../lib/safe";
 import { useAudio } from "../context/AudioContext";
-import { parseMarkdown } from "../lib/markdownParser";
+import { parseMarkdown } from "../lib/newMarkDownParser";
 import { MediaPanel } from "./document-renderer/MediaPanel";
 import { DocumentPanel } from "./document-renderer/DocumentPanel";
 import { useTrackManagement } from "./document-renderer/useTrackManagement";
