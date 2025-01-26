@@ -118,17 +118,11 @@ function convertNode(node: any, currentTrack: TrackInfoNode | null): Node {
                 position: currentTrack?.position
             };
 
-        case 'blockquote': {
-            // Split content by newlines and create a text node for each line
-            const lines = node.content.split('\n').filter(Boolean);
+        case 'blockquote':
             return {
                 type: 'blockquote',
-                children: lines.map((line: string) => ({
-                    type: 'text',
-                    value: line.trim()
-                }))
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
             };
-        }
 
         case 'codeBlock':
             return {
