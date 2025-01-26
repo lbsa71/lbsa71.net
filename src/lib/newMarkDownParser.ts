@@ -7,17 +7,7 @@ After implementing, the tests in src/lib/__tests__/newMarkdownParser.test.ts sho
 */
 
 import { MarkdownParser } from "@lbsa71/markdown-parser";
-import { ParsedDocument, HeaderNode, 
-    TextNode, LinkNode, TrackInfoNode, 
-    ParagraphNode, Node, ImageNode, InlineNode } from "./types";
-
-type BaseMarkdownNode = {
-    type: string;
-    content: string;
-    raw: string;
-    children?: BaseMarkdownNode[];
-    metadata?: Record<string, any>;
-};
+import { ParsedDocument, Node, TrackInfoNode, ImageNode } from "./types";
 
 type ParserError = {
     message: string;
@@ -33,7 +23,6 @@ type ParseResult = ParsedDocument & {
 function parseTrackInfo(text: string, line?: number): [TrackInfoNode | null, ParserError[]] {
     const errors: ParserError[] = [];
     
-    // First check if it has a position bracket at the end
     const posMatch = text.match(/\[([^\]]+)\]$/);
     if (!posMatch) {
         errors.push({
@@ -54,7 +43,6 @@ function parseTrackInfo(text: string, line?: number): [TrackInfoNode | null, Par
         return [null, errors];
     }
 
-    // Now parse the rest of the track info
     const trackText = text.slice(0, text.lastIndexOf('[')).trim();
     const match = trackText.match(/^(.+?)(?:\s*-\s*(.+?))?(?:\s*\((.+?)\))?$/);
     
@@ -79,65 +67,115 @@ function parseTrackInfo(text: string, line?: number): [TrackInfoNode | null, Par
     }, errors];
 }
 
-function convertInlineNode(node: BaseMarkdownNode): [InlineNode, ParserError[]] {
-    const errors: ParserError[] = [];
-    
-    if (node.type === 'text') {
-        return [{
-            type: 'text',
-            value: node.content
-        }, errors];
-    } else if (node.type === 'link') {
-        if (!node.metadata?.url) {
-            errors.push({
-                message: 'Link missing URL',
-                line: node.metadata?.position?.line,
-                type: 'validation'
-            });
-        }
-        return [{
-            type: 'link',
-            url: node.metadata?.url || '',
-            children: [{ type: 'text', value: node.content }]
-        }, errors];
-    }
-    
-    // Default to text node for unsupported types
-    errors.push({
-        message: `Unsupported inline node type: ${node.type}`,
-        line: node.metadata?.position?.line,
-        type: 'structure'
-    });
-    
-    return [{
-        type: 'text',
-        value: node.content
-    }, errors];
-}
+function convertNode(node: any, currentTrack: TrackInfoNode | null): Node {
+    switch (node.type) {
+        case 'text':
+            return {
+                type: 'text',
+                value: node.content
+            };
 
-function convertHeaderLevel(type: string): [HeaderNode['level'], ParserError[]] {
-    const errors: ParserError[] = [];
-    const level = parseInt(type.replace('header', ''), 10);
-    
-    if (level < 1 || level > 6) {
-        errors.push({
-            message: `Invalid header level: ${level}`,
-            type: 'validation'
-        });
-        return [1, errors]; // Default to h1 if invalid
+        case 'header1':
+        case 'header2':
+        case 'header3':
+        case 'header4':
+        case 'header5':
+        case 'header6': {
+            const level = parseInt(node.type.replace('header', ''), 10) as 1 | 2 | 3 | 4 | 5 | 6;
+            return {
+                type: 'header',
+                level,
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+        }
+
+        case 'paragraph':
+            return {
+                type: 'paragraph',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || [],
+                position: currentTrack?.position,
+                hasTrack: !!currentTrack
+            };
+
+        case 'link':
+            if (!node.metadata?.url) {
+                throw new Error('Link missing URL');
+            }
+            return {
+                type: 'link',
+                url: node.metadata.url,
+                children: [{ type: 'text', value: node.content }]
+            };
+
+        case 'image':
+            if (!node.metadata?.url) {
+                throw new Error('Image missing URL');
+            }
+            return {
+                type: 'image',
+                src: node.metadata.url,
+                alt: node.metadata.alt || '',
+                position: currentTrack?.position
+            };
+
+        case 'blockquote':
+            return {
+                type: 'blockquote',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+
+        case 'codeBlock':
+            return {
+                type: 'codeBlock',
+                value: node.content,
+                language: node.metadata?.language
+            };
+
+        case 'bold':
+            return {
+                type: 'bold',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+
+        case 'italic':
+            return {
+                type: 'italic',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+
+        case 'list':
+            return {
+                type: 'list',
+                ordered: node.metadata?.listType === 'ordered',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+
+        case 'listItem':
+            return {
+                type: 'listItem',
+                children: node.children?.map((child: any) => convertNode(child, currentTrack)) || []
+            };
+
+        default:
+            return {
+                type: 'paragraph',
+                children: [{ 
+                    type: 'text',
+                    value: node.content || ''
+                }],
+                position: currentTrack?.position,
+                hasTrack: !!currentTrack
+            };
     }
-    
-    return [level as HeaderNode['level'], errors];
 }
 
 export function parseMarkdown(markdown: string): ParseResult {
     const parser = new MarkdownParser();
-    let document: BaseMarkdownNode;
+    let document: any;
     
     try {
-        document = parser.parse(markdown) as BaseMarkdownNode;
+        document = parser.parse(markdown);
     } catch (error) {
-        // Handle parser errors gracefully
         return {
             nodes: [],
             tracks: [],
@@ -153,104 +191,58 @@ export function parseMarkdown(markdown: string): ParseResult {
     const errors: ParserError[] = [];
     let currentTrack: TrackInfoNode | null = null;
 
-    function processNode(node: BaseMarkdownNode): Node | null {
-        if (node.type.startsWith('header')) {
-            const [level, headerErrors] = convertHeaderLevel(node.type);
-            errors.push(...headerErrors);
-            
-            if (level === 4) {
-                const [trackInfo, trackErrors] = parseTrackInfo(node.content, node.metadata?.position?.line);
+    // Process all nodes
+    for (const child of document.children || []) {
+        try {
+            if (child.type === 'header4') {
+                const [trackInfo, trackErrors] = parseTrackInfo(child.content);
                 errors.push(...trackErrors);
-                
                 if (trackInfo) {
                     if (currentTrack) {
                         tracks.push(currentTrack);
                     }
                     currentTrack = trackInfo;
-                    return trackInfo;
+                    nodes.push(currentTrack);
+                    continue;
                 }
             }
 
-            const inlineNodes: InlineNode[] = [];
-            for (const child of node.children || []) {
-                const [inlineNode, inlineErrors] = convertInlineNode(child);
-                inlineNodes.push(inlineNode);
-                errors.push(...inlineErrors);
-            }
-
-            return {
-                type: 'header',
-                level,
-                children: inlineNodes
-            };
-        }
-
-        if (node.type === 'paragraph') {
-            if (node.children?.length === 1 && node.children[0].type === 'image') {
-                const imageNode = node.children[0];
+            // Handle images inside paragraphs
+            if (child.type === 'paragraph' && child.children?.length === 1 && child.children[0].type === 'image') {
+                const imageNode = child.children[0];
+                if (!imageNode.metadata?.url) {
+                    throw new Error('Image missing URL');
+                }
+                const convertedImage = {
+                    type: 'image' as const,
+                    src: imageNode.metadata.url,
+                    alt: imageNode.metadata.alt || '',
+                    position: currentTrack?.position
+                };
                 if (currentTrack) {
-                    if (!imageNode.metadata?.url) {
-                        errors.push({
-                            message: 'Image missing URL',
-                            line: imageNode.metadata?.position?.line,
-                            type: 'validation'
-                        });
-                    }
-                    
-                    const image: ImageNode = {
-                        type: 'image',
-                        src: imageNode.metadata?.url || '',
-                        alt: imageNode.metadata?.alt || '',
-                        position: currentTrack.position
-                    };
                     currentTrack.images = currentTrack.images || [];
-                    currentTrack.images.push(image);
+                    currentTrack.images.push(convertedImage);
                 }
-                return null;
+                continue;
             }
 
-            const inlineNodes: InlineNode[] = [];
-            for (const child of node.children || []) {
-                const [inlineNode, inlineErrors] = convertInlineNode(child);
-                inlineNodes.push(inlineNode);
-                errors.push(...inlineErrors);
-            }
-
-            return {
-                type: 'paragraph',
-                children: inlineNodes,
-                position: currentTrack?.position,
-                hasTrack: !!currentTrack
-            };
-        }
-
-        errors.push({
-            message: `Unsupported node type: ${node.type}`,
-            line: node.metadata?.position?.line,
-            type: 'structure'
-        });
-
-        // Default case - convert to paragraph
-        return {
-            type: 'paragraph',
-            children: [{ type: 'text', value: node.content }],
-            position: currentTrack?.position,
-            hasTrack: !!currentTrack
-        };
-    }
-
-    // Process all nodes
-    for (const child of document.children || []) {
-        const processedNode = processNode(child);
-        if (processedNode) {
-            nodes.push(processedNode);
+            nodes.push(convertNode(child, currentTrack));
+        } catch (error) {
+            errors.push({
+                message: error instanceof Error ? error.message : 'Unknown error',
+                type: 'validation'
+            });
         }
     }
 
-    // Add the last track if exists
-    if (currentTrack) {
+    // Add the last track if it exists and hasn't been added
+    if (currentTrack && !tracks.includes(currentTrack)) {
         tracks.push(currentTrack);
     }
 
-    return { nodes, tracks, errors };
+    return {
+        nodes,
+        tracks,
+        errors
+    };
 }

@@ -1,4 +1,4 @@
-export type NodeType = 'text' | 'header' | 'paragraph' | 'link' | 'track_info' | 'image';
+export type NodeType = 'text' | 'header' | 'paragraph' | 'link' | 'track_info' | 'image' | 'blockquote' | 'codeBlock' | 'bold' | 'italic' | 'list' | 'listItem';
 
 export type BaseNode = {
   type: NodeType;
@@ -44,8 +44,40 @@ export type TrackInfoNode = BaseNode & {
   images?: ImageNode[];
 };
 
-export type Node = TextNode | HeaderNode | ParagraphNode | LinkNode | TrackInfoNode | ImageNode;
-export type InlineNode = TextNode | LinkNode;
+export type BlockquoteNode = BaseNode & {
+  type: 'blockquote';
+  children: InlineNode[];
+};
+
+export type CodeBlockNode = BaseNode & {
+  type: 'codeBlock';
+  value: string;
+  language?: string;
+};
+
+export type BoldNode = BaseNode & {
+  type: 'bold';
+  children: InlineNode[];
+};
+
+export type ItalicNode = BaseNode & {
+  type: 'italic';
+  children: InlineNode[];
+};
+
+export type ListNode = BaseNode & {
+  type: 'list';
+  ordered: boolean;
+  children: ListItemNode[];
+};
+
+export type ListItemNode = BaseNode & {
+  type: 'listItem';
+  children: (ParagraphNode | ListNode)[];
+};
+
+export type Node = TextNode | HeaderNode | ParagraphNode | LinkNode | TrackInfoNode | ImageNode | BlockquoteNode | CodeBlockNode | BoldNode | ItalicNode | ListNode | ListItemNode;
+export type InlineNode = TextNode | LinkNode | BoldNode | ItalicNode;
 
 export type ParsedDocument = {
   nodes: Node[];

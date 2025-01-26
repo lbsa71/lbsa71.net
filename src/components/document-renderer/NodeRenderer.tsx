@@ -11,8 +11,6 @@ type NodeRendererProps = {
   highlightedRef: RefObject<HTMLParagraphElement>;
 };
 
-type HeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
-
 const hasChildren = (node: Node): node is Node & { children: Node[] } =>
   'children' in node && Array.isArray(node.children);
 
@@ -43,7 +41,7 @@ export const NodeRenderer = ({
       return <>{node.value}</>;
 
     case 'header': {
-      const HeaderTag = `h${node.level as HeaderLevel}` as keyof JSX.IntrinsicElements;
+      const HeaderTag = `h${node.level}` as keyof JSX.IntrinsicElements;
       return (
         <HeaderTag>
           {renderChildren({ node, media_url, currentTrack, highlightedRef })}
@@ -71,6 +69,52 @@ export const NodeRenderer = ({
         <MediaItem href={node.url} media_url={media_url}>
           {renderChildren({ node, media_url, currentTrack, highlightedRef })}
         </MediaItem>
+      );
+
+    case 'blockquote':
+      return (
+        <blockquote className={styles.blockquote}>
+          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+        </blockquote>
+      );
+
+    case 'codeBlock':
+      return (
+        <pre className={styles.codeBlock}>
+          <code className={node.language ? `language-${node.language}` : undefined}>
+            {node.value}
+          </code>
+        </pre>
+      );
+
+    case 'bold':
+      return (
+        <strong>
+          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+        </strong>
+      );
+
+    case 'italic':
+      return (
+        <em>
+          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+        </em>
+      );
+
+    case 'list': {
+      const ListTag = node.ordered ? 'ol' : 'ul';
+      return (
+        <ListTag className={styles.list}>
+          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+        </ListTag>
+      );
+    }
+
+    case 'listItem':
+      return (
+        <li>
+          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+        </li>
       );
 
     case 'track_info':
