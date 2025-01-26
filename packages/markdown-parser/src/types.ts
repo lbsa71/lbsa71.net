@@ -1,16 +1,4 @@
-export type TokenType = 
-  | 'header1' 
-  | 'header2' 
-  | 'header3' 
-  | 'header4' 
-  | 'header5' 
-  | 'header6'
-  | 'paragraph'
-  | 'link'
-  | 'image'
-  | 'text'
-  | 'horizontalRule'
-  | 'citation';
+export type HeaderLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type Position = {
   line: number;
@@ -18,28 +6,56 @@ export type Position = {
   offset: number;
 };
 
-export type TokenContext = {
-  type: TokenType;
+export type BlockNodeType =
+  | 'document'
+  | 'paragraph'
+  | `header${HeaderLevel}`
+  | 'blockquote'
+  | 'codeBlock'
+  | 'horizontalRule';
+
+export type InlineNodeType =
+  | 'text'
+  | 'bold'
+  | 'italic'
+  | 'code'
+  | 'link'
+  | 'image'
+  | 'citation';
+
+export type NodeType = BlockNodeType | InlineNodeType;
+
+export interface NodeMetadata {
+  level?: HeaderLevel;
+  href?: string;
+  title?: string;
+  src?: string;
+  alt?: string;
+  cite?: string;
+  language?: string;
+}
+
+export interface BaseNode {
+  type: NodeType;
   content: string;
   raw: string;
   position: Position;
-  parent?: Token;
-};
+  metadata?: NodeMetadata;
+}
 
-export type Token = TokenContext & {
-  children?: Token[];
-};
+export interface BlockNode extends BaseNode {
+  type: BlockNodeType;
+  children: (BlockNode | InlineNode)[];
+}
 
-export type ParserCallbacks = {
-  onHeader?: (context: TokenContext) => void;
-  onParagraph?: (context: TokenContext) => void;
-  onLink?: (context: TokenContext & { href: string; title?: string }) => void;
-  onImage?: (context: TokenContext & { src: string; alt?: string }) => void;
-  onHorizontalRule?: (context: TokenContext) => void;
-  onCitation?: (context: TokenContext & { cite: string }) => void;
-  onText?: (context: TokenContext) => void;
-};
+export interface InlineNode extends BaseNode {
+  type: InlineNodeType;
+}
 
-export type ParserOptions = {
-  callbacks: ParserCallbacks;
-}; 
+export type Node = BlockNode | InlineNode;
+
+export type Visitor = (type: NodeType) => void;
+
+export interface ParserOptions {
+  visitor?: Visitor;
+} 

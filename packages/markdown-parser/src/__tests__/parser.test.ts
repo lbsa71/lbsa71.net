@@ -1,236 +1,271 @@
 import { MarkdownParser } from '../parser';
-import { ParserCallbacks, TokenContext } from '../types';
+import { BlockNode, InlineNode, Node, Visitor, NodeType } from '../types';
 
 describe('MarkdownParser', () => {
-  const createMockCallbacks = (): ParserCallbacks & { calls: TokenContext[] } => {
-    const calls: TokenContext[] = [];
-    return {
-      calls,
-      onHeader: (ctx: TokenContext) => calls.push(ctx),
-      onParagraph: (ctx: TokenContext) => calls.push(ctx),
-      onLink: (ctx: TokenContext) => calls.push(ctx),
-      onImage: (ctx: TokenContext) => calls.push(ctx),
-      onHorizontalRule: (ctx: TokenContext) => calls.push(ctx),
-      onCitation: (ctx: TokenContext) => calls.push(ctx),
-      onText: (ctx: TokenContext) => calls.push(ctx),
-    };
-  };
+  it('should parse headers into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('# Header 1\n## Header 2\n### Deep header');
 
-  it('should parse headers correctly with proper content and position', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(3);
+
+    const [h1, h2, h3] = ast.children as BlockNode[];
     
-    parser.parse('# Header 1\n## Header 2\n### Deep header');
-    
-    expect(callbacks.calls).toHaveLength(3);
-    expect(callbacks.calls[0]).toMatchObject({
+    expect(h1).toMatchObject({
       type: 'header1',
       content: 'Header 1',
       raw: '# Header 1',
-      position: { line: 1, column: 1 }
+      position: { line: 1, column: 1 },
+      metadata: { level: 1 },
+      children: [{ type: 'text', content: 'Header 1' }],
     });
-    expect(callbacks.calls[1]).toMatchObject({
+
+    expect(h2).toMatchObject({
       type: 'header2',
       content: 'Header 2',
       raw: '## Header 2',
-      position: { line: 2, column: 1 }
+      position: { line: 2, column: 1 },
+      metadata: { level: 2 },
+      children: [{ type: 'text', content: 'Header 2' }],
     });
-    expect(callbacks.calls[2]).toMatchObject({
+
+    expect(h3).toMatchObject({
       type: 'header3',
       content: 'Deep header',
       raw: '### Deep header',
-      position: { line: 3, column: 1 }
+      position: { line: 3, column: 1 },
+      metadata: { level: 3 },
+      children: [{ type: 'text', content: 'Deep header' }],
     });
   });
 
-  it('should parse links correctly with href and title', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
+  it('should parse links into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('Check out [this link](https://example.com "Example") and [another](https://test.com)');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(1);
+
+    const [paragraph] = ast.children as BlockNode[];
+    expect(paragraph.type).toBe('paragraph');
+    expect(paragraph.children).toHaveLength(4);
+
+    const [text1, link1, text2, link2] = paragraph.children as InlineNode[];
     
-    parser.parse('Check out [this link](https://example.com "Example") and [another](https://test.com)');
-    
-    expect(callbacks.calls).toHaveLength(4); // text + link + text + link
-    expect(callbacks.calls[0]).toMatchObject({
-      type: 'paragraph',
-      content: 'Check out'
+    expect(text1).toMatchObject({
+      type: 'text',
+      content: 'Check out ',
     });
-    expect(callbacks.calls[1]).toMatchObject({
+
+    expect(link1).toMatchObject({
       type: 'link',
-      content: '[this link](https://example.com "Example")',
-      href: 'https://example.com',
-      title: 'Example'
+      content: 'this link',
+      metadata: {
+        href: 'https://example.com',
+        title: 'Example',
+      },
     });
-    expect(callbacks.calls[2]).toMatchObject({
-      type: 'paragraph',
-      content: 'and'
+
+    expect(text2).toMatchObject({
+      type: 'text',
+      content: ' and ',
     });
-    expect(callbacks.calls[3]).toMatchObject({
+
+    expect(link2).toMatchObject({
       type: 'link',
-      content: '[another](https://test.com)',
-      href: 'https://test.com',
-      title: undefined
+      content: 'another',
+      metadata: {
+        href: 'https://test.com',
+      },
     });
   });
 
-  it('should parse images correctly with src and alt text', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
+  it('should parse images into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('![Alt text](image.jpg)\n![](empty.png)\n![Complex alt with [brackets]](complex.jpg)');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(3);
+
+    const [p1, p2, p3] = ast.children as BlockNode[];
     
-    parser.parse('![Alt text](image.jpg)\n![](empty.png)\n![Complex alt with [brackets]](complex.jpg)');
-    
-    expect(callbacks.calls).toHaveLength(3);
-    expect(callbacks.calls[0]).toMatchObject({
+    expect(p1.children[0]).toMatchObject({
       type: 'image',
-      content: '![Alt text](image.jpg)',
-      src: 'image.jpg',
-      alt: 'Alt text'
+      content: '',
+      metadata: {
+        src: 'image.jpg',
+        alt: 'Alt text',
+      },
     });
-    expect(callbacks.calls[1]).toMatchObject({
+
+    expect(p2.children[0]).toMatchObject({
       type: 'image',
-      content: '![](empty.png)',
-      src: 'empty.png',
-      alt: ''
+      content: '',
+      metadata: {
+        src: 'empty.png',
+        alt: '',
+      },
     });
-    expect(callbacks.calls[2]).toMatchObject({
+
+    expect(p3.children[0]).toMatchObject({
       type: 'image',
-      content: '![Complex alt with [brackets]](complex.jpg)',
-      src: 'complex.jpg',
-      alt: 'Complex alt with [brackets]'
+      content: '',
+      metadata: {
+        src: 'complex.jpg',
+        alt: 'Complex alt with [brackets]',
+      },
     });
   });
 
-  it('should parse horizontal rules with different markers', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
+  it('should parse blockquotes into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('> Single line quote\n> Multi-line\n> blockquote\n\n> Another quote');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(2);
+
+    const [quote1, quote2] = ast.children as BlockNode[];
     
-    parser.parse('---\n-----\n-------------------');
-    
-    expect(callbacks.calls).toHaveLength(3);
-    callbacks.calls.forEach(call => {
-      expect(call).toMatchObject({
-        type: 'horizontalRule',
-        content: '',
-      });
+    expect(quote1).toMatchObject({
+      type: 'blockquote',
+      content: 'Single line quote\nMulti-line\nblockquote',
+      children: [{ type: 'text', content: 'Single line quote\nMulti-line\nblockquote' }],
+    });
+
+    expect(quote2).toMatchObject({
+      type: 'blockquote',
+      content: 'Another quote',
+      children: [{ type: 'text', content: 'Another quote' }],
     });
   });
 
-  it('should parse citations in different contexts', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
+  it('should parse inline formatting into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('This is **bold** and *italic* text. Also __bold__ and _italic_.');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(1);
+
+    const [paragraph] = ast.children as BlockNode[];
+    expect(paragraph.children).toHaveLength(9);
+
+    const [text1, bold1, text2, italic1, text3, bold2, text4, italic2, text5] = paragraph.children as InlineNode[];
     
-    parser.parse('Reference [0]\nAnother [123]\nInvalid [abc]');
-    
-    expect(callbacks.calls).toHaveLength(5); // text + citation + text + citation + text
-    expect(callbacks.calls[0]).toMatchObject({
-      type: 'paragraph',
-      content: 'Reference'
+    expect(text1).toMatchObject({
+      type: 'text',
+      content: 'This is ',
     });
-    expect(callbacks.calls[1]).toMatchObject({
+
+    expect(bold1).toMatchObject({
+      type: 'bold',
+      content: 'bold',
+    });
+
+    expect(text2).toMatchObject({
+      type: 'text',
+      content: ' and ',
+    });
+
+    expect(italic1).toMatchObject({
+      type: 'italic',
+      content: 'italic',
+    });
+
+    expect(text3).toMatchObject({
+      type: 'text',
+      content: ' text. Also ',
+    });
+
+    expect(bold2).toMatchObject({
+      type: 'bold',
+      content: 'bold',
+    });
+
+    expect(text4).toMatchObject({
+      type: 'text',
+      content: ' and ',
+    });
+
+    expect(italic2).toMatchObject({
+      type: 'italic',
+      content: 'italic',
+    });
+
+    expect(text5).toMatchObject({
+      type: 'text',
+      content: '.',
+    });
+  });
+
+  it('should parse code blocks into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('```typescript\nconst x: number = 42;\n```\n\n```\nNo language specified\n```');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(2);
+
+    const [code1, code2] = ast.children as BlockNode[];
+    
+    expect(code1).toMatchObject({
+      type: 'codeBlock',
+      content: 'const x: number = 42;',
+      metadata: { language: 'typescript' },
+    });
+
+    expect(code2).toMatchObject({
+      type: 'codeBlock',
+      content: 'No language specified',
+      metadata: { language: '' },
+    });
+  });
+
+  it('should parse citations into proper AST nodes', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('Reference [0]\nAnother [123]\nInvalid [abc]');
+
+    expect(ast.type).toBe('document');
+    expect(ast.children).toHaveLength(3);
+
+    const [p1, p2, p3] = ast.children as BlockNode[];
+    
+    expect(p1.children).toHaveLength(2);
+    expect(p1.children[1]).toMatchObject({
       type: 'citation',
-      content: '[0]',
-      cite: '0'
+      content: '0',
+      metadata: { cite: '0' },
     });
-    expect(callbacks.calls[2]).toMatchObject({
-      type: 'paragraph',
-      content: 'Another'
-    });
-    expect(callbacks.calls[3]).toMatchObject({
+
+    expect(p2.children).toHaveLength(2);
+    expect(p2.children[1]).toMatchObject({
       type: 'citation',
-      content: '[123]',
-      cite: '123'
+      content: '123',
+      metadata: { cite: '123' },
     });
-    expect(callbacks.calls[4]).toMatchObject({
-      type: 'paragraph',
-      content: 'Invalid [abc]'
-    });
-  });
 
-  it('should parse mixed content with proper nesting', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
-    
-    const markdown = `# Main Title
-This is a [link](https://example.com) in a paragraph.
-![Image](test.jpg) with text after.
-
-## Section [1]
----
-Final paragraph.`;
-    
-    parser.parse(markdown);
-    
-    const expectedSequence = [
-      ['header1', 'Main Title'],
-      ['paragraph', 'This is a'],
-      ['link', '[link](https://example.com)'],
-      ['paragraph', 'in a paragraph.'],
-      ['image', '![Image](test.jpg)'],
-      ['paragraph', 'with text after.'],
-      ['header2', 'Section [1]'],
-      ['horizontalRule', ''],
-      ['paragraph', 'Final paragraph.']
-    ];
-    
-    expect(callbacks.calls).toHaveLength(expectedSequence.length);
-    callbacks.calls.forEach((call, index) => {
-      expect(call).toMatchObject({
-        type: expectedSequence[index][0],
-        content: expectedSequence[index][1]
-      });
+    expect(p3.children).toHaveLength(1);
+    expect(p3.children[0]).toMatchObject({
+      type: 'text',
+      content: 'Invalid [abc]',
     });
   });
 
-  it('should parse the example markdown with full content validation', () => {
-    const callbacks = createMockCallbacks();
-    const parser = new MarkdownParser({ callbacks });
-    
-    const markdown = `# Science/Fiction 4.0
-Concept and Live mixing: [lbsa71](https://soundcloud.com/lbsa71)
-Track Selection, Story, Code: lbsa71, [Claude](https://claude.ai/) and [ChatGPT](https://openai.com/)
-Images: ChatGPT
+  it('should support visitor pattern for AST traversal', () => {
+    const parser = new MarkdownParser();
+    const ast = parser.parse('# Title\nParagraph with **bold** text.');
 
-#### Pursuit - Gesaffelstein [0]
-![Image 1](https://media.lbsa71.net/users/st_ephan/sf4/pursuit.webp)
-Humanity's an addict, and progress is our drug of choice. We see a ledge, we leap - consequences be damned.`;
-    
-    parser.parse(markdown);
-    
-    const expectedSequence = [
-      ['header1', 'Science/Fiction 4.0'],
-      ['paragraph', 'Concept and Live mixing:'],
-      ['link', '[lbsa71](https://soundcloud.com/lbsa71)'],
-      ['paragraph', 'Track Selection, Story, Code: lbsa71,'],
-      ['link', '[Claude](https://claude.ai/)'],
-      ['paragraph', 'and'],
-      ['link', '[ChatGPT](https://openai.com/)'],
-      ['paragraph', 'Images: ChatGPT'],
-      ['header4', 'Pursuit - Gesaffelstein [0]'],
-      ['image', '![Image 1](https://media.lbsa71.net/users/st_ephan/sf4/pursuit.webp)'],
-      ['paragraph', 'Humanity\'s an addict, and progress is our drug of choice. We see a ledge, we leap - consequences be damned.']
-    ];
-    
-    expect(callbacks.calls).toHaveLength(expectedSequence.length);
-    callbacks.calls.forEach((call, index) => {
-      const [expectedType, expectedContent] = expectedSequence[index];
-      expect(call).toMatchObject({
-        type: expectedType,
-        content: expectedContent,
-        position: expect.objectContaining({
-          line: expect.any(Number),
-          column: expect.any(Number),
-          offset: expect.any(Number)
-        })
-      });
+    const visited: string[] = [];
+    const visitor = (type: NodeType) => visited.push(type);
 
-      // Additional validations for specific types
-      if (call.type === 'link') {
-        expect(call).toHaveProperty('href');
-      } else if (call.type === 'image') {
-        expect(call).toHaveProperty('src');
-        expect(call).toHaveProperty('alt');
-      } else if (call.type === 'citation') {
-        expect(call).toHaveProperty('cite');
-      }
-    });
+    parser.visit(ast, visitor);
+
+    expect(visited).toEqual([
+      'document',
+      'header1',
+      'text',
+      'paragraph',
+      'text',
+      'bold',
+      'text'
+    ]);
   });
 }); 
