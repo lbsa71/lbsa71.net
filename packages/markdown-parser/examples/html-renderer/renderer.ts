@@ -99,7 +99,7 @@ export class HtmlRenderer {
 
       case 'image':
         const src = node.metadata?.url || '';
-        const alt = node.metadata?.alt || '';
+        const alt = node.metadata?.alt || node.content;
         const imgTitle = node.metadata?.title ? ` title="${this.escape(node.metadata.title)}"` : '';
         this.inlineResult.push(`<img src="${src}" alt="${alt}"${imgTitle}>`);
         break;

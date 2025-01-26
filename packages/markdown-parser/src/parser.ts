@@ -61,6 +61,25 @@ export class MarkdownParser {
     while (pos < text.length) {
       const char = text[pos];
 
+      if (char === '!' && text[pos + 1] === '[') {
+        const endBracket = text.indexOf(']', pos + 2);
+        if (endBracket !== -1) {
+          const nextChar = text[endBracket + 1];
+          if (nextChar === '(') {
+            const endParen = text.indexOf(')', endBracket + 2);
+            if (endParen !== -1) {
+              const alt = text.slice(pos + 2, endBracket);
+              const url = text.slice(endBracket + 2, endParen);
+              const node = this.createNode('image', alt, text.slice(pos, endParen + 1));
+              node.metadata = { url, alt };
+              nodes.push(node as InlineNode);
+              pos = endParen + 1;
+              continue;
+            }
+          }
+        }
+      }
+
       if (char === '*' || char === '_') {
         const isDouble = text[pos + 1] === char;
         const type = isDouble ? 'bold' : 'italic';
@@ -109,7 +128,7 @@ export class MarkdownParser {
 
       // If no special character is found, treat as text
       let textEnd = pos + 1;
-      while (textEnd < text.length && !'*_[`'.includes(text[textEnd])) {
+      while (textEnd < text.length && !'!*_[`'.includes(text[textEnd])) {
         textEnd++;
       }
       const content = text.slice(pos, textEnd);

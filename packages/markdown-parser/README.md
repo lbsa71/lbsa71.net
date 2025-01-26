@@ -2,6 +2,16 @@
 
 A robust and extensible markdown parser that creates an Abstract Syntax Tree (AST) from markdown text. The parser supports a variety of markdown features and provides a visitor pattern for traversing and transforming the AST.
 
+## Architecture
+
+![Architecture Diagram](docs/images/architecture.png)
+
+The Markdown Parser follows a modular architecture that separates concerns into distinct components:
+- The Parser transforms markdown text into an Abstract Syntax Tree (AST)
+- The AST consists of Block Nodes (structural elements) and Inline Nodes (text formatting)
+- Visitors can traverse the AST to perform transformations or analysis
+- Renderers (like the HTML Renderer) convert the AST into the desired output format
+
 ## Features
 
 - **Block Elements**
