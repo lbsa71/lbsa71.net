@@ -1,56 +1,7 @@
-type NodeType = 'text' | 'header' | 'paragraph' | 'link' | 'track_info' | 'image';
+import { ParsedDocument, HeaderNode, 
+  TextNode, LinkNode, TrackInfoNode, 
+  ParagraphNode, Node, ImageNode, InlineNode } from "./types";
 
-type BaseNode = {
-  type: NodeType;
-};
-
-type TextNode = BaseNode & {
-  type: 'text';
-  value: string;
-};
-
-type HeaderNode = BaseNode & {
-  type: 'header';
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  children: InlineNode[];
-};
-
-type ParagraphNode = BaseNode & {
-  type: 'paragraph';
-  children: InlineNode[];
-  position?: number;
-  hasTrack?: boolean;
-};
-
-type LinkNode = BaseNode & {
-  type: 'link';
-  url: string;
-  children: TextNode[];
-};
-
-type ImageNode = BaseNode & {
-  type: 'image';
-  src: string;
-  alt: string;
-  position?: number;
-};
-
-type TrackInfoNode = BaseNode & {
-  type: 'track_info';
-  title: string;
-  artist: string;
-  album?: string;
-  position: number;
-  images?: ImageNode[];
-};
-
-export type Node = TextNode | HeaderNode | ParagraphNode | LinkNode | TrackInfoNode | ImageNode;
-type InlineNode = TextNode | LinkNode;
-
-type ParsedDocument = {
-  nodes: Node[];
-  tracks: TrackInfoNode[];
-};
 
 function parseInlineContent(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];

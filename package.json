@@ -23,7 +23,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^5.3.0",
-    "react-markdown": "^9.0.1"
+    "react-markdown": "^9.0.1",
+    "@lbsa71/markdown-parser": "file:packages/markdown-parser"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

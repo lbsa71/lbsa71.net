@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 import styles from "../../styles/content-document.module.css";
-import { Node } from "../../lib/markdownParser";
+import { Node } from "../../lib/types";
 import { TrackInfo } from "./types";
 import { NodeRenderer } from "./NodeRenderer";
 

@@ -1,0 +1,30 @@
+digraph MarkdownParser {
+  rankdir=LR;
+  node [shape=box, style=rounded, fontname="Arial"];
+  edge [fontname="Arial", fontsize=10];
+
+  // Components
+  Input [label="Markdown Text"];
+  Parser [label="MarkdownParser"];
+  AST [label="Abstract Syntax Tree"];
+  Visitor [label="Visitor"];
+  Renderer [label="HTML Renderer"];
+  Output [label="HTML Output"];
+
+  // Node Types
+  subgraph cluster_0 {
+    label = "Node Types";
+    style = rounded;
+    BlockNodes [label="Block Nodes\n- document\n- paragraph\n- header\n- blockquote\n- list\n- listItem\n- codeBlock"];
+    InlineNodes [label="Inline Nodes\n- text\n- bold\n- italic\n- link\n- image\n- code\n- citation"];
+  }
+
+  // Relationships
+  Input -> Parser [label="parse()"];
+  Parser -> AST;
+  AST -> BlockNodes [style=dashed, label="contains"];
+  BlockNodes -> InlineNodes [style=dashed, label="contains"];
+  AST -> Visitor [label="visit()"];
+  AST -> Renderer [label="render()"];
+  Renderer -> Output;
+} 
