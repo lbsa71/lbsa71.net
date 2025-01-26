@@ -200,6 +200,18 @@
   color: #4b5563;
 }
 
+.blockquote > div {
+  margin: 0.5em 0;
+}
+
+.blockquote > div:first-child {
+  margin-top: 0;
+}
+
+.blockquote > div:last-child {
+  margin-bottom: 0;
+}
+
 .codeBlock {
   background-color: #f3f4f6;
   border-radius: 0.375rem;

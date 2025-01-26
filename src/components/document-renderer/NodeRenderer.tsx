@@ -74,7 +74,11 @@ export const NodeRenderer = ({
     case 'blockquote':
       return (
         <blockquote className={styles.blockquote}>
-          {renderChildren({ node, media_url, currentTrack, highlightedRef })}
+          {node.children.map((child, index) => (
+            <div key={index}>
+              {renderChildren({ node: { ...node, children: [child] }, media_url, currentTrack, highlightedRef })}
+            </div>
+          ))}
         </blockquote>
       );
 
