@@ -27,6 +27,7 @@ export type NodeMetadata = {
   url?: string;
   alt?: string;
   title?: string;
+  cite?: string;
 };
 
 export type Position = {
@@ -51,7 +52,7 @@ export type InlineNode = Node & {
   type: InlineNodeType;
 };
 
-export type Visitor = (node: Node) => void;
+export type Visitor = (node: NodeType) => void;
 
 export type ParserOptions = {
   visitor?: Visitor;

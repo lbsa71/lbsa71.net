@@ -57,27 +57,76 @@ export class MarkdownParser {
   private parseInlineElements(text: string): InlineNode[] {
     const nodes: InlineNode[] = [];
     let pos = 0;
+    let textStart = pos;
+
+    const addTextNode = (end: number) => {
+      if (end > textStart) {
+        const content = text.slice(textStart, end);
+        if (content) {
+          nodes.push(this.createNode('text', content, content) as InlineNode);
+        }
+      }
+    };
 
     while (pos < text.length) {
       const char = text[pos];
 
       if (char === '!' && text[pos + 1] === '[') {
-        const endBracket = text.indexOf(']', pos + 2);
+        addTextNode(pos);
+        const endBracket = this.findClosingBracket(text, pos + 2);
         if (endBracket !== -1) {
           const nextChar = text[endBracket + 1];
           if (nextChar === '(') {
             const endParen = text.indexOf(')', endBracket + 2);
             if (endParen !== -1) {
               const alt = text.slice(pos + 2, endBracket);
-              const url = text.slice(endBracket + 2, endParen);
-              const node = this.createNode('image', alt, text.slice(pos, endParen + 1));
-              node.metadata = { url, alt };
+              const urlAndTitle = text.slice(endBracket + 2, endParen);
+              const [url, title] = this.parseUrlAndTitle(urlAndTitle);
+              const node = this.createNode('image', '', text.slice(pos, endParen + 1));
+              node.metadata = { url, alt, ...(title ? { title } : {}) };
               nodes.push(node as InlineNode);
               pos = endParen + 1;
+              textStart = pos;
               continue;
             }
           }
         }
+      }
+
+      if (char === '[') {
+        const endBracket = text.indexOf(']', pos);
+        if (endBracket !== -1) {
+          // Check if it's a citation (just a number in brackets)
+          const citationContent = text.slice(pos + 1, endBracket);
+          if (/^\d+$/.test(citationContent)) {
+            addTextNode(pos);
+            const node = this.createNode('citation', citationContent, text.slice(pos, endBracket + 1));
+            node.metadata = { cite: citationContent };
+            nodes.push(node as InlineNode);
+            pos = endBracket + 1;
+            textStart = pos;
+            continue;
+          }
+
+          const nextChar = text[endBracket + 1];
+          if (nextChar === '(') {
+            addTextNode(pos);
+            const endParen = text.indexOf(')', endBracket + 2);
+            if (endParen !== -1) {
+              const content = text.slice(pos + 1, endBracket);
+              const urlAndTitle = text.slice(endBracket + 2, endParen);
+              const [url, title] = this.parseUrlAndTitle(urlAndTitle);
+              const node = this.createNode('link', content, text.slice(pos, endParen + 1));
+              node.metadata = { url, ...(title ? { title } : {}) };
+              nodes.push(node as InlineNode);
+              pos = endParen + 1;
+              textStart = pos;
+              continue;
+            }
+          }
+        }
+        pos++;
+        continue;
       }
 
       if (char === '*' || char === '_') {
@@ -86,58 +135,44 @@ export class MarkdownParser {
         const length = isDouble ? 2 : 1;
         const endPos = text.indexOf(char.repeat(length), pos + length);
 
-        if (endPos !== -1) {
+        if (endPos !== -1 && endPos > pos + length) {
+          addTextNode(pos);
           const content = text.slice(pos + length, endPos);
           const children = this.parseInlineElements(content);
           const node = this.createNode(type, content, text.slice(pos, endPos + length), children);
           nodes.push(node as InlineNode);
           pos = endPos + length;
+          textStart = pos;
           continue;
         }
       }
 
-      if (char === '[') {
-        const endBracket = text.indexOf(']', pos);
-        if (endBracket !== -1) {
-          const nextChar = text[endBracket + 1];
-          if (nextChar === '(') {
-            const endParen = text.indexOf(')', endBracket + 2);
-            if (endParen !== -1) {
-              const content = text.slice(pos + 1, endBracket);
-              const url = text.slice(endBracket + 2, endParen);
-              const node = this.createNode('link', content, text.slice(pos, endParen + 1));
-              node.metadata = { url };
-              nodes.push(node as InlineNode);
-              pos = endParen + 1;
-              continue;
-            }
-          }
-        }
-      }
-
       if (char === '`') {
+        addTextNode(pos);
         const endPos = text.indexOf('`', pos + 1);
         if (endPos !== -1) {
           const content = text.slice(pos + 1, endPos);
           const node = this.createNode('code', content, text.slice(pos, endPos + 1));
           nodes.push(node as InlineNode);
           pos = endPos + 1;
+          textStart = pos;
           continue;
         }
       }
 
-      // If no special character is found, treat as text
-      let textEnd = pos + 1;
-      while (textEnd < text.length && !'!*_[`'.includes(text[textEnd])) {
-        textEnd++;
-      }
-      const content = text.slice(pos, textEnd);
-      const node = this.createNode('text', content, content);
-      nodes.push(node as InlineNode);
-      pos = textEnd;
+      pos++;
     }
 
+    addTextNode(pos);
     return nodes;
+  }
+
+  private parseUrlAndTitle(text: string): [string, string | undefined] {
+    const titleMatch = text.match(/^([^"]+)\s+"([^"]+)"$/);
+    if (titleMatch) {
+      return [titleMatch[1], titleMatch[2]];
+    }
+    return [text, undefined];
   }
 
   private parseList(lines: string[], startIndex: number): [BlockNode, number] {
@@ -217,6 +252,7 @@ export class MarkdownParser {
       throw new Error('Invalid header line');
     }
 
+    this.currentLine = startIndex + 1;
     const level = headerMatch[1].length as HeaderLevel;
     const content = headerMatch[2];
     const children = this.parseInlineElements(content);
@@ -316,13 +352,31 @@ export class MarkdownParser {
   }
 
   public visit(node: Node, visitor: Visitor) {
-    visitor(node);
-
+    visitor(node.type);
     if (this.isBlockType(node.type)) {
       const blockNode = node as BlockNode;
       if (blockNode.children) {
-        blockNode.children.forEach(child => this.visit(child, visitor));
+        for (const child of blockNode.children) {
+          this.visit(child, visitor);
+        }
       }
     }
+  }
+
+  private findClosingBracket(text: string, start: number): number {
+    let depth = 1;
+    let pos = start;
+    while (pos < text.length) {
+      if (text[pos] === '[') {
+        depth++;
+      } else if (text[pos] === ']') {
+        depth--;
+        if (depth === 0) {
+          return pos;
+        }
+      }
+      pos++;
+    }
+    return -1;
   }
 } 

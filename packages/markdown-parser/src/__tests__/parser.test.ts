@@ -61,7 +61,7 @@ describe('MarkdownParser', () => {
       type: 'link',
       content: 'this link',
       metadata: {
-        href: 'https://example.com',
+        url: 'https://example.com',
         title: 'Example',
       },
     });
@@ -75,7 +75,7 @@ describe('MarkdownParser', () => {
       type: 'link',
       content: 'another',
       metadata: {
-        href: 'https://test.com',
+        url: 'https://test.com',
       },
     });
   });
@@ -93,7 +93,7 @@ describe('MarkdownParser', () => {
       type: 'image',
       content: '',
       metadata: {
-        src: 'image.jpg',
+        url: 'image.jpg',
         alt: 'Alt text',
       },
     });
@@ -102,7 +102,7 @@ describe('MarkdownParser', () => {
       type: 'image',
       content: '',
       metadata: {
-        src: 'empty.png',
+        url: 'empty.png',
         alt: '',
       },
     });
@@ -111,7 +111,7 @@ describe('MarkdownParser', () => {
       type: 'image',
       content: '',
       metadata: {
-        src: 'complex.jpg',
+        url: 'complex.jpg',
         alt: 'Complex alt with [brackets]',
       },
     });

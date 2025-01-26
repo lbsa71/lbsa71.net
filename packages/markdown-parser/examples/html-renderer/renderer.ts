@@ -7,9 +7,11 @@ export class HtmlRenderer {
 
   constructor() {}
 
-  render(node: BlockNode): string {
+  render(input: string | BlockNode): string {
+    this.result = [];
+    const node = typeof input === 'string' ? new MarkdownParser().parse(input) : input;
     this.renderNode(node);
-    return this.result.join('');
+    return this.result.join('').replace(/\n+$/, '');
   }
 
   private escape(text: string): string {
@@ -31,7 +33,7 @@ export class HtmlRenderer {
         this.isInline = true;
         this.inlineResult = [];
         this.renderChildren(node as BlockNode);
-        this.result.push(`<p>${this.inlineResult.join('')}</p>`);
+        this.result.push(`<p>${this.inlineResult.join('')}</p>\n`);
         this.isInline = false;
         break;
 
@@ -39,15 +41,15 @@ export class HtmlRenderer {
         this.isInline = true;
         this.inlineResult = [];
         this.renderChildren(node as BlockNode);
-        this.result.push(`<blockquote>${this.inlineResult.join('')}</blockquote>`);
+        this.result.push(`<blockquote>${this.inlineResult.join('')}</blockquote>\n`);
         this.isInline = false;
         break;
 
       case 'list':
         const listType = node.metadata?.listType === 'ordered' ? 'ol' : 'ul';
-        this.result.push(`<${listType}>`);
+        this.result.push(`<${listType}>\n`);
         this.renderChildren(node as BlockNode);
-        this.result.push(`</${listType}>`);
+        this.result.push(`</${listType}>\n`);
         break;
 
       case 'listItem':
@@ -63,12 +65,12 @@ export class HtmlRenderer {
             this.isInline = false;
           }
         }
-        this.result.push('</li>');
+        this.result.push('</li>\n');
         break;
 
       case 'codeBlock':
         const language = node.metadata?.language || '';
-        this.result.push(`<pre><code class="language-${language}">${this.escape(node.content)}</code></pre>`);
+        this.result.push(`<pre><code class="language-${language}">${this.escape(node.content)}</code></pre>\n`);
         break;
 
       case 'text':
@@ -76,19 +78,13 @@ export class HtmlRenderer {
         break;
 
       case 'bold':
-        this.isInline = true;
-        this.inlineResult = [];
-        this.renderChildren(node as BlockNode);
-        this.inlineResult.push(`<strong>${this.inlineResult.join('')}</strong>`);
-        this.isInline = false;
+        const boldContent = this.renderInline(node as BlockNode);
+        this.inlineResult.push(`<strong>${boldContent}</strong>`);
         break;
 
       case 'italic':
-        this.isInline = true;
-        this.inlineResult = [];
-        this.renderChildren(node as BlockNode);
-        this.inlineResult.push(`<em>${this.inlineResult.join('')}</em>`);
-        this.isInline = false;
+        const italicContent = this.renderInline(node as BlockNode);
+        this.inlineResult.push(`<em>${italicContent}</em>`);
         break;
 
       case 'link':
@@ -99,7 +95,7 @@ export class HtmlRenderer {
 
       case 'image':
         const src = node.metadata?.url || '';
-        const alt = node.metadata?.alt || node.content;
+        const alt = node.metadata?.alt || '';
         const imgTitle = node.metadata?.title ? ` title="${this.escape(node.metadata.title)}"` : '';
         this.inlineResult.push(`<img src="${src}" alt="${alt}"${imgTitle}>`);
         break;
@@ -109,17 +105,17 @@ export class HtmlRenderer {
         break;
 
       case 'citation':
-        const cite = node.metadata?.url || '';
-        this.inlineResult.push(`<cite cite="${cite}">${this.escape(node.content)}</cite>`);
+        const cite = node.metadata?.cite || '';
+        this.inlineResult.push(`<cite>[${this.escape(cite)}]</cite>`);
         break;
 
       default:
-        if (node.type.startsWith('header')) {
+        if (typeof node.type === 'string' && node.type.startsWith('header')) {
           const level = node.metadata?.level || 1;
           this.isInline = true;
           this.inlineResult = [];
           this.renderChildren(node as BlockNode);
-          this.result.push(`<h${level}>${this.inlineResult.join('')}</h${level}>`);
+          this.result.push(`<h${level}>${this.inlineResult.join('')}</h${level}>\n`);
           this.isInline = false;
         }
         break;
@@ -132,5 +128,14 @@ export class HtmlRenderer {
         this.renderNode(child);
       }
     }
+  }
+
+  private renderInline(node: BlockNode): string {
+    const prevInlineResult = this.inlineResult;
+    this.inlineResult = [];
+    this.renderChildren(node);
+    const result = this.inlineResult.join('');
+    this.inlineResult = prevInlineResult;
+    return result;
   }
 } 

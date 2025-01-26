@@ -7,9 +7,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "example": "ts-node examples/html-renderer/example.ts > docs.html",
-    "docs:diagram": "dot -Tpng docs/architecture.dot -o docs/images/architecture.png",
-    "docs": "npm run docs:diagram && npm run example"
+    "example": "ts-node examples/html-renderer/example.ts > docs.html"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
