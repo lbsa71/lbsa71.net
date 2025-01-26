@@ -177,6 +177,93 @@ describe('parseMarkdown', () => {
     });
   });
 
+  describe('error handling', () => {
+    it('should collect track info format errors', () => {
+      const input = '#### Invalid Track Format';
+      const result = parseMarkdown(input);
+      
+      expect(result.errors).toContainEqual(expect.objectContaining({
+        message: 'Invalid track info format',
+        type: 'syntax'
+      }));
+    });
+
+    it('should collect invalid track position errors', () => {
+      const input = '#### Song - Artist [invalid]';
+      const result = parseMarkdown(input);
+      
+      expect(result.errors).toContainEqual(expect.objectContaining({
+        message: 'Invalid track position',
+        type: 'validation'
+      }));
+    });
+
+    it('should collect missing URL errors for links', () => {
+      const input = '# Title with [broken link]()';
+      const result = parseMarkdown(input);
+      
+      expect(result.errors).toContainEqual(expect.objectContaining({
+        message: 'Link missing URL',
+        type: 'validation'
+      }));
+    });
+
+    it('should collect missing URL errors for images', () => {
+      const input = '#### Song - Artist [1]\n![]()';
+      const result = parseMarkdown(input);
+      
+      expect(result.errors).toContainEqual(expect.objectContaining({
+        message: 'Image missing URL',
+        type: 'validation'
+      }));
+    });
+
+    it('should collect multiple errors in a single document', () => {
+      const input = `#### Invalid Track
+#### Song - Artist [invalid]
+# Title with [broken link]()
+#### Valid - Track [1]
+![]()`;
+      const result = parseMarkdown(input);
+      
+      // Should have at least 4 errors:
+      // 1. Invalid track format
+      // 2. Invalid track position
+      // 3. Missing link URL
+      // 4. Missing image URL
+      expect(result.errors.length).toBeGreaterThanOrEqual(4);
+      
+      const errorTypes = result.errors.map(e => e.type);
+      expect(errorTypes).toContain('syntax');
+      expect(errorTypes).toContain('validation');
+    });
+
+    it('should continue parsing after encountering errors', () => {
+      const input = `#### Invalid Track
+#### Valid - Track [1]
+Some text`;
+      const result = parseMarkdown(input);
+      
+      // Should have error but still parse valid content
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.tracks.length).toBe(1);
+      expect(result.nodes.length).toBeGreaterThan(0);
+    });
+
+    it('should handle empty or malformed documents gracefully', () => {
+      const inputs = ['', ' ', '#', '####'];
+      
+      for (const input of inputs) {
+        const result = parseMarkdown(input);
+        expect(result.nodes).toBeDefined();
+        expect(result.tracks).toBeDefined();
+        expect(result.errors).toBeDefined();
+        // Should not throw errors
+        expect(() => parseMarkdown(input)).not.toThrow();
+      }
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle empty input', () => {
       const result = parseMarkdown('');
