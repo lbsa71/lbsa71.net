@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 
 type User = {
     id: string;
@@ -10,7 +11,8 @@ type User = {
 
 type AuthContextType = {
     user: User | null;
-    login: (user: User) => void;
+    token: string | null;
+    login: (credential: string) => void;
     logout: () => void;
 };
 
@@ -35,14 +37,28 @@ const AuthProviderInternal = ({ children }: ProviderProps) => {
         return savedUser ? JSON.parse(savedUser) : null;
     });
 
-    const login = (newUser: User) => {
+    const [token, setToken] = useState<string | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const savedToken = localStorage.getItem('token');
+        return savedToken ? savedToken : null;
+    });
+
+    const login = (token: string) => {
+        const newUser: User = jwtDecode<User>(token);
+
         setUser(newUser);
+        setToken(token);
+
         localStorage.setItem('user', JSON.stringify(newUser));
+        localStorage.setItem('token', token);
     };
 
     const logout = () => {
         setUser(null);
+        setToken(null);
+
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
     };
 
     useEffect(() => {
@@ -58,6 +74,7 @@ const AuthProviderInternal = ({ children }: ProviderProps) => {
 
     const value: AuthContextType = {
         user,
+        token,
         login,
         logout,
     };
