@@ -117,9 +117,10 @@ const AuthMenu = ({ className }: AuthMenuProps) => {
       ) : (
         <GoogleLogin
           onSuccess={credentialResponse => {
-            if (credentialResponse.credential) {
-              const decoded = jwtDecode<User>(credentialResponse.credential);
-              login(decoded);
+            const credential = credentialResponse.credential;
+
+            if (credential) {
+              login(credential);
             } else {
               console.log('Credential is undefined');
             }

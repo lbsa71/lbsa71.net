@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from "react";
-import axios from "axios";
+import { createAuthenticatedOperations } from "@/lib/http";
+import { useAuth } from "@/context/AuthContext";
 import { MarkdownSyntaxHelp } from "./MarkdownSyntaxHelp";
 import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
 import { DocumentRenderer } from "./DocumentRenderer";
@@ -145,6 +146,8 @@ export const MarkdownEditor = ({
   _config
 }: MarkdownEditorProps) => {
   const { user_id, document_id } = document;
+  const { token } = useAuth();
+  const operations = createAuthenticatedOperations(token);
 
   if (!user_id) return null;
 
@@ -155,7 +158,9 @@ export const MarkdownEditor = ({
     const endpoint = isEditMode ? "/api/update" : "/api/create";
 
     try {
-      const { data } = await axios.post<Partial<ContentDocument>>(endpoint, document);
+      const data = endpoint === "/api/update"
+        ? await operations.updateDocument(document)
+        : await operations.createDocument(document);
       setDocument(prev => ({ ...prev, ...data }));
     } catch (error) {
       console.error("Failed to save document", error);
@@ -166,9 +171,7 @@ export const MarkdownEditor = ({
     if (!isEditMode) return;
 
     try {
-      await axios.delete("/api/delete", {
-        data: { user_id, document_id },
-      });
+      await operations.deleteDocument(user_id, document_id);
       setDocument(defaultDocument);
       alert("Document deleted successfully");
     } catch (error) {

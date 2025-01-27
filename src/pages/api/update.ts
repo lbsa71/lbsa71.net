@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { UpdateCommand, PutCommand, dynamoDb } from "@/lib/dynamodb";
+import { UpdateCommand, PutCommand, dynamoDb, fetchSiteByUserId } from "@/lib/dynamodb";
 import { jwtDecode } from "jwt-decode";
 
 type User = {
@@ -16,11 +16,11 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   const token = authorization.split(" ")[1];
+
   const user = jwtDecode<User>(token);
 
   const {
     user_id,
-    admin_user_id,
     document_id,
     content,
     hero_img,
@@ -28,6 +28,9 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
     playlist,
     ordinal,
   } = req.body;
+
+  const site = await fetchSiteByUserId(user_id);
+  const admin_user_id = site.admin_user_id;
 
   if (!user_id || !document_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });

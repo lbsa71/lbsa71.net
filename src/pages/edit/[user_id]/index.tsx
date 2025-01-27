@@ -1,13 +1,9 @@
 import { Config, ContentDocument, findSiteByUserId, Site } from "@/lib/getSite";
 import { useAuth } from "@/context/AuthContext";
 import { fetchSiteByContext, fetchSiteByUserId } from "@/lib/dynamodb";
-import axios from "axios";
+import { createAuthenticatedOperations } from "@/lib/http";
 import { GetServerSidePropsContext } from "next";
 import { useEffect, useState } from "react";
-
-type APIContentDocuments = {
-  data: ContentDocument[];
-};
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
@@ -21,7 +17,8 @@ export const getServerSideProps = async (
 };
 
 const EditList = ({ site }: { site: Site }) => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  const operations = createAuthenticatedOperations(token);
 
   const [documents, setDocuments] = useState<ContentDocument[]>();
   const user_id = site.user_id;
@@ -29,12 +26,9 @@ const EditList = ({ site }: { site: Site }) => {
   useEffect(() => {
     if (!user_id) return;
 
-    axios
-      .get<any, APIContentDocuments>(`/api/list?user_id=${user_id}`)
-      .then((response) => {
-        const documents = response.data;
-        setDocuments(documents);
-      })
+    operations
+      .listDocuments(user_id)
+      .then(setDocuments)
       .catch((error) => console.error("Failed to fetch document", error));
   }, [user_id]);
 

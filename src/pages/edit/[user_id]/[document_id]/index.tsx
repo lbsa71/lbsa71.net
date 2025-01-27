@@ -1,6 +1,7 @@
 import MarkdownEditor from "@/components/MarkdownEditor";
 import { Config, ContentDocument, ReqContext } from "@/lib/getSite";
-import axios from "axios";
+import { createAuthenticatedOperations } from "@/lib/http";
+import { useAuth } from "@/context/AuthContext";
 import getConfig from "next/config";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -16,38 +17,27 @@ export const defaultDocument: ContentDocument = {
   ordinal: "",
 };
 
-type APIContentDocument = {
-  data: ContentDocument;
-};
+const EditorPage = ({ _config }: { _config: Config }) => {
+  const router = useRouter();
+  const { user_id, document_id } = router.query;
+  const { token } = useAuth();
+  const operations = createAuthenticatedOperations(token);
 
-const fetchDocument = (
-  userId: string,
-  documentId: string,
-  setDocument: React.Dispatch<React.SetStateAction<ContentDocument>>
-) => {
-  axios
-    .get<any, APIContentDocument>(
-      `/api/read?user_id=${userId}&document_id=${documentId}`
-    )
-    .then((response) => {
-      const document = response.data;
+  const [document, setDocument] = useState<ContentDocument>(defaultDocument);
+
+  const fetchDocument = async (userId: string, documentId: string) => {
+    try {
+      const document = await operations.readDocument(userId, documentId);
       setDocument(document);
-    })
-    .catch((error) => {
+    } catch (error) {
       setDocument({
         ...defaultDocument,
         user_id: userId,
         document_id: documentId,
       });
-      return console.error("Failed to fetch document", error);
-    });
-};
-
-const EditorPage = ({ _config }: { _config: Config }) => {
-  const router = useRouter();
-  const { user_id, document_id } = router.query;
-
-  const [document, setDocument] = useState<ContentDocument>(defaultDocument);
+      console.error("Failed to fetch document", error);
+    }
+  };
 
   useEffect(() => {
     if (
@@ -56,7 +46,7 @@ const EditorPage = ({ _config }: { _config: Config }) => {
       typeof user_id === "string" &&
       typeof document_id === "string"
     ) {
-      fetchDocument(user_id, document_id, setDocument);
+      fetchDocument(user_id, document_id);
     }
   }, [user_id, document_id]);
 
