@@ -1,24 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { UpdateCommand, PutCommand, dynamoDb, fetchSiteByUserId } from "@/lib/dynamodb";
-import { jwtDecode } from "jwt-decode";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  sub: string;
-};
+import { UpdateCommand, PutCommand, dynamoDb } from "@/lib/dynamodb";
+import { withAuth } from "./lib/withAuth";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { authorization } = req.headers;
-  if (!authorization) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const token = authorization.split(" ")[1];
-
-  const user = jwtDecode<User>(token);
-
   const {
     user_id,
     document_id,
@@ -29,15 +13,8 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
     ordinal,
   } = req.body;
 
-  const site = await fetchSiteByUserId(user_id);
-  const admin_user_id = site.admin_user_id;
-
   if (!user_id || !document_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  if (user.sub !== admin_user_id) {
-    return res.status(403).json({ error: "Forbidden: You do not have access to update this document" });
   }
 
   try {
@@ -84,4 +61,4 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-export default updateHandler;
+export default withAuth(updateHandler);

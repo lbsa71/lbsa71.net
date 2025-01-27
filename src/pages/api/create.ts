@@ -1,12 +1,16 @@
 import { randomUUID } from "crypto";
-
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { PutCommand, dynamoDb } from "@/lib/dynamodb";
+import { withAuth } from "./lib/withAuth";
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, content } = req.body;
-  let { document_id } = req.body;
 
+  if (!user_id || !content) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  let { document_id } = req.body;
   if (!document_id) {
     document_id = randomUUID();
   }
@@ -41,4 +45,4 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 };
 
-export default createHandler;
+export default withAuth(createHandler);
