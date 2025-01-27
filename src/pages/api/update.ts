@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { UpdateCommand, PutCommand, dynamoDb } from "@/lib/dynamodb";
+import { UpdateCommand, dynamoDb } from "@/lib/dynamodb";
 import { withAuth } from "./lib/withAuth";
+import { backupDocument } from "@/lib/backupDocument";
 
 const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   const {
@@ -18,23 +19,16 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
-    const version_id = new Date().toISOString();
-
-    await dynamoDb.send(
-      new PutCommand({
-        TableName: "lbsa71_net_backup",
-        Item: {
-          user_id,
-          document_id,
-          versionId: version_id,
-          content,
-          hero_img,
-          media_item,
-          playlist,
-          ordinal,
-        },
-      })
-    );
+    // Create backup
+    await backupDocument({
+      user_id,
+      document_id,
+      content,
+      hero_img,
+      media_item,
+      playlist,
+      ordinal,
+    });
 
     const result = await dynamoDb.send(
       new UpdateCommand({
