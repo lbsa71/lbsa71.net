@@ -1,6 +1,7 @@
 import { useState, useEffect, HTMLAttributes } from "react";
 import { AudioProvider, useAudio } from "../context/AudioContext";
 import AudioPlayer from "./AudioPlayer";
+import { ZoomableImage } from "./ZoomableImage";
 import styles from "../styles/AudioPlayer.module.css";
 
 type TrackInfo = {
@@ -35,7 +36,7 @@ const TrackDisplay = ({ trackData }: { trackData: TrackInfo[] }) => {
 
     const cuePoints = trackData
       .map(track => track.position)
-      .filter((time): time is number => 
+      .filter((time): time is number =>
         typeof time === 'number' && !isNaN(time) && time >= 0
       );
 
@@ -48,7 +49,7 @@ const TrackDisplay = ({ trackData }: { trackData: TrackInfo[] }) => {
 
   useEffect(() => {
     const newTrack = trackData.find((track, index) =>
-      currentTime >= track.position && 
+      currentTime >= track.position &&
       (index === trackData.length - 1 || currentTime < trackData[index + 1].position)
     );
 
@@ -143,6 +144,18 @@ const MediaItem = ({
       <div {...props}>
         <video controls src={fullHref} onEnded={onEnded} autoPlay={autoPlay} />
       </div>
+    );
+  }
+
+  // Handle image files
+  if (fullHref.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+    return (
+      <ZoomableImage
+        src={href}
+        media_url={media_url}
+        className={className}
+        alt={typeof children === 'string' ? children : ''}
+      />
     );
   }
 
