@@ -22,6 +22,9 @@ export const withAuth = (handler: ApiHandler): ApiHandler => {
         const token = authorization.split(" ")[1];
         const user = jwtDecode<User>(token);
 
+        (req as any).user = user;
+
+        // For operations that modify data, fetch site and verify admin access
         if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method || "")) {
             const { user_id } = req.body;
             if (!user_id) {
@@ -30,10 +33,10 @@ export const withAuth = (handler: ApiHandler): ApiHandler => {
 
             try {
                 const site = await fetchSiteByUserId(user_id);
-                const admin_user_id = site.admin_user_id;
+                (req as any).site = site;
 
-                if (user.sub !== admin_user_id) {
-                    console.log(user.sub, "!==", admin_user_id);
+                if (user.sub !== site.admin_user_id) {
+                    console.log(user.sub, "!==", site.admin_user_id);
                     return res.status(403).json({ error: "Forbidden: You do not have access to modify this resource" });
                 }
             } catch (error) {
@@ -41,8 +44,6 @@ export const withAuth = (handler: ApiHandler): ApiHandler => {
                 return res.status(500).json({ error: "Failed to verify authorization" });
             }
         }
-
-        (req as any).user = user;
 
         return handler(req, res);
     };
