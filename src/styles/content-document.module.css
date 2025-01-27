@@ -21,7 +21,7 @@
   padding-right: 8px;
 }
 
-.content-document-container .media-panel > * {
+.content-document-container .media-panel>* {
   margin: 0 16px;
   width: calc(100% - 32px);
   box-sizing: border-box;
@@ -101,11 +101,11 @@
   gap: 2px;
 }
 
-.current-track > *:first-child {
+.current-track>*:first-child {
   font-weight: 500;
 }
 
-.current-track > *:last-child {
+.current-track>*:last-child {
   opacity: 0.8;
   font-size: 0.95em;
 }
@@ -163,7 +163,7 @@
     padding: 0;
   }
 
-  .content-document-container .media-panel > *,
+  .content-document-container .media-panel>*,
   .slideshow-container,
   .media-container {
     margin: 0 !important;
@@ -198,6 +198,8 @@
   margin: 1.5em 0;
   padding-left: 1em;
   color: #4b5563;
+  white-space: pre-line;
+  /* Preserves line breaks while collapsing whitespace */
 }
 
 .codeBlock {
@@ -212,13 +214,24 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.875rem;
   line-height: 1.5;
+  white-space: pre-wrap;
+  /* Preserves all whitespace and wraps lines */
+  display: block;
+  /* Ensures the code block takes full width */
 }
 
 .list {
   margin: 1em 0;
   padding-left: 2em;
+  list-style-position: outside;
+  list-style: disc;
 }
 
-.list li {
+.list ol {
+  list-style: decimal;
+}
+
+.listItem {
   margin: 0.5em 0;
+  display: list-item;
 }

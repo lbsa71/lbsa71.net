@@ -1,7 +1,7 @@
 import { RefObject } from "react";
 import styles from "../../styles/content-document.module.css";
 import MediaItem from "../MediaItem";
-import { Node } from "../../lib/types";
+import { Node, ListNode } from "../../lib/types";
 import { TrackInfo } from "./types";
 
 type NodeRendererProps = {
@@ -16,7 +16,7 @@ const hasChildren = (node: Node): node is Node & { children: Node[] } =>
 
 const renderChildren = (props: NodeRendererProps) => {
   if (!hasChildren(props.node)) return null;
-  
+
   return (
     <>
       {props.node.children.map((child: Node, index: number) => (
@@ -50,12 +50,12 @@ export const NodeRenderer = ({
     }
 
     case 'paragraph': {
-      const isHighlighted = node.hasTrack && 
-        currentTrack?.position !== undefined && 
+      const isHighlighted = node.hasTrack &&
+        currentTrack?.position !== undefined &&
         node.position === currentTrack.position;
 
       return (
-        <p 
+        <p
           ref={isHighlighted ? highlightedRef : null}
           className={isHighlighted ? styles['highlighted-paragraph'] : undefined}
         >
@@ -102,7 +102,7 @@ export const NodeRenderer = ({
       );
 
     case 'list': {
-      const ListTag = node.ordered ? 'ol' : 'ul';
+      const ListTag = (node as ListNode).ordered ? 'ol' : 'ul';
       return (
         <ListTag className={styles.list}>
           {renderChildren({ node, media_url, currentTrack, highlightedRef })}
@@ -112,7 +112,7 @@ export const NodeRenderer = ({
 
     case 'listItem':
       return (
-        <li>
+        <li className={styles.listItem}>
           {renderChildren({ node, media_url, currentTrack, highlightedRef })}
         </li>
       );
