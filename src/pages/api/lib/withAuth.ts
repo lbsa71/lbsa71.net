@@ -26,7 +26,8 @@ export const withAuth = (handler: ApiHandler): ApiHandler => {
 
         // For operations that modify data, fetch site and verify admin access
         if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method || "")) {
-            const { user_id } = req.body;
+            const user_id = req.body?.user_id;
+
             if (!user_id) {
                 return res.status(400).json({ error: "Missing user_id" });
             }
