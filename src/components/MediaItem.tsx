@@ -148,7 +148,7 @@ const MediaItem = ({
   }
 
   // Handle image files
-  if (fullHref.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+  if (fullHref.match(/\.(jpg|jpeg|png|gif|webp|avif)$/i)) {
     return (
       <ZoomableImage
         src={href}
