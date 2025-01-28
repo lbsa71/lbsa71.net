@@ -18,7 +18,7 @@ type MediaPanelProps = {
   onTrackChange: (index: number) => void;
 };
 
-const hasImages = (track: TrackInfo | null): track is TrackInfo & { images: ImageInfo[] } => 
+const hasImages = (track: TrackInfo | null): track is TrackInfo & { images: ImageInfo[] } =>
   Boolean(track?.images && track.images.length > 0);
 
 export const MediaPanel = ({
@@ -33,17 +33,12 @@ export const MediaPanel = ({
   onAudioEnd,
   onTrackChange,
 }: MediaPanelProps) => {
-  const hero_href = hero_img?.startsWith("http") 
-    ? hero_img 
-    : hero_img ? `${media_url}/${hero_img}` 
-    : undefined;
-
   return (
     <div className={styles["media-panel"]}>
-      {hero_href && (
+      {hero_img && (
         <MediaItem
           media_url={media_url}
-          href={hero_href}
+          href={hero_img}
           className={styles["media-image"]}
         />
       )}
@@ -61,7 +56,7 @@ export const MediaPanel = ({
       )}
       {hasImages(currentTrack) && (
         <div className={styles["slideshow-container"]}>
-          <Slideshow 
+          <Slideshow
             images={currentTrack.images}
             media_url={media_url}
           />
