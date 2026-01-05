@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { DeleteCommand, dynamoDb } from "@/lib/dynamodb";
 import { withAuth } from "./lib/withAuth";
-import { backupDocument, getDocumentForBackup } from "@/lib/backupDocument";
+import { getRepository } from "@/lib/storage/repositoryFactory";
 
 const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, document_id } = req.body;
@@ -11,25 +10,19 @@ const deleteHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
+    const repository = getRepository();
+
     // Get current document data for backup
-    const documentData = await getDocumentForBackup(user_id, document_id);
-    if (!documentData) {
+    const document = await repository.getDocument(user_id, document_id);
+    if (!document) {
       return res.status(404).json({ error: "Document not found" });
     }
 
     // Create backup
-    await backupDocument(documentData);
+    await repository.backupDocument(document);
 
     // Delete the document
-    await dynamoDb.send(
-      new DeleteCommand({
-        TableName: "lbsa71_net",
-        Key: {
-          user_id,
-          document_id,
-        },
-      })
-    );
+    await repository.deleteDocument(user_id, document_id);
 
     res.status(200).json({ message: "Post deleted" });
   } catch (error) {

@@ -1,24 +1,15 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { GetCommand, dynamoDb } from "@/lib/dynamodb";
 import { ContentDocument } from "@/lib/getSite";
 import { localDocument } from "./localDocuments";
+import { getRepository } from "@/lib/storage/repositoryFactory";
 
 export const getDocument = async (user_id: string, document_id: string) => {
   if (document_id === "local") {
     return localDocument;
   }
 
-  return (
-    await dynamoDb.send(
-      new GetCommand({
-        TableName: "lbsa71_net",
-        Key: {
-          user_id,
-          document_id,
-        },
-      })
-    )
-  ).Item as ContentDocument | undefined;
+  const repository = getRepository();
+  return await repository.getDocument(user_id, document_id);
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {

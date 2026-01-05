@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { PutCommand, dynamoDb } from "@/lib/dynamodb";
 import { withAuth } from "./lib/withAuth";
+import { getRepository } from "@/lib/storage/repositoryFactory";
+import { ContentDocument } from "@/lib/getSite";
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, content } = req.body;
@@ -27,18 +28,21 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
   }
 
   try {
-    const data = await dynamoDb.send(
-      new PutCommand({
-        TableName: "lbsa71_net",
-        Item: {
-          user_id,
-          document_id,
-          content,
-        },
-      })
-    );
+    const repository = getRepository();
+    const document: ContentDocument = {
+      user_id,
+      document_id,
+      content,
+      hero_img: '',
+      media_item: '',
+      ordinal: '',
+      playlist: '',
+      title: ''
+    };
 
-    res.status(200).json({ message: "Post created", document_id, data });
+    await repository.createDocument(document);
+
+    res.status(200).json({ message: "Post created", document_id });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create post" });

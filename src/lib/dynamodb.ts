@@ -1,8 +1,8 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { 
+import {
   DynamoDBDocumentClient,
-  PutCommand, 
-  GetCommand, 
+  PutCommand,
+  GetCommand,
   QueryCommand,
   DeleteCommand,
   UpdateCommand,
@@ -20,30 +20,47 @@ import {
 import { getOrThrowEnvironmentVariable } from "./throwUtils";
 import { Config, findSiteByContext, findSiteByDomain, findSiteByUserId, type ReqContext } from "./getSite";
 
-// Environment variables
-const REGION = getOrThrowEnvironmentVariable("AWS_REGION");
-const ACCESS_KEY_ID = getOrThrowEnvironmentVariable("AWS_ACCESS_KEY_ID");
-const SECRET_ACCESS_KEY = getOrThrowEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+// Lazy initialization to avoid requiring AWS credentials when using JSON storage
+let _dynamoDb: DynamoDBDocumentClient | null = null;
 
-// DynamoDB Client Configuration
-const clientConfig = {
-  region: REGION,
-  credentials: {
-    accessKeyId: ACCESS_KEY_ID,
-    secretAccessKey: SECRET_ACCESS_KEY,
-  },
-} as const;
+function getDynamoDBClient(): DynamoDBDocumentClient {
+  if (!_dynamoDb) {
+    // Environment variables
+    const REGION = getOrThrowEnvironmentVariable("AWS_REGION");
+    const ACCESS_KEY_ID = getOrThrowEnvironmentVariable("AWS_ACCESS_KEY_ID");
+    const SECRET_ACCESS_KEY = getOrThrowEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
 
-const documentClientConfig = {
-  marshallOptions: {
-    removeUndefinedValues: true,
-    convertEmptyValues: true,
-  },
-} as const;
+    // DynamoDB Client Configuration
+    const clientConfig = {
+      region: REGION,
+      credentials: {
+        accessKeyId: ACCESS_KEY_ID,
+        secretAccessKey: SECRET_ACCESS_KEY,
+      },
+    } as const;
 
-// Client Initialization
-const client = new DynamoDBClient(clientConfig);
-export const dynamoDb = DynamoDBDocumentClient.from(client, documentClientConfig);
+    const documentClientConfig = {
+      marshallOptions: {
+        removeUndefinedValues: true,
+        convertEmptyValues: true,
+      },
+    } as const;
+
+    // Client Initialization
+    const client = new DynamoDBClient(clientConfig);
+    _dynamoDb = DynamoDBDocumentClient.from(client, documentClientConfig);
+  }
+  return _dynamoDb;
+}
+
+// Export dynamoDb as a getter property using Proxy for lazy initialization
+export const dynamoDb = new Proxy({} as DynamoDBDocumentClient, {
+  get(target, prop) {
+    const client = getDynamoDBClient();
+    const value = (client as any)[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
+  }
+});
 
 // Table Names
 const SITE_CONFIG_TABLE = "lbsa71_net";
@@ -73,22 +90,9 @@ export {
 
 // Site Configuration Operations
 export const getConfig = async (): Promise<Config> => {
-  const queryCommand = new QueryCommand({
-    TableName: SITE_CONFIG_TABLE,
-    KeyConditionExpression: "user_id = :uid and document_id = :did",
-    ExpressionAttributeValues: {
-      ":uid": "_root",
-      ":did": "config",
-    },
-  });
-
-  const data = await dynamoDb.send(queryCommand);
-
-  if (!data.Items?.[0]) {
-    throw new Error("Site configuration not found");
-  }
-
-  return data.Items[0] as Config;
+  const { getRepository } = await import('./storage/repositoryFactory');
+  const repository = getRepository();
+  return await repository.getConfig();
 };
 
 // Site Fetch Operations

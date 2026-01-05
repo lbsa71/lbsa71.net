@@ -1,0 +1,9 @@
+{
+  "storage": {
+    "type": "json",
+    "options": {
+      "filePath": "data/lbsa71.export.json",
+      "backupPath": "data/backups/"
+    }
+  }
+}

@@ -1,14 +1,21 @@
 import { createMocks } from 'node-mocks-http';
 import readEndpoint, { getDocument } from '../read';
-import { dynamoDb } from '@/lib/dynamodb';
 import { localDocument } from '../localDocuments';
 
-// Mock dependencies
-jest.mock('@/lib/dynamodb', () => ({
-    dynamoDb: {
-        send: jest.fn()
-    },
-    GetCommand: jest.fn()
+// Mock repository
+const mockRepository = {
+    getDocument: jest.fn(),
+    listDocuments: jest.fn(),
+    createDocument: jest.fn(),
+    updateDocument: jest.fn(),
+    deleteDocument: jest.fn(),
+    getConfig: jest.fn(),
+    updateConfig: jest.fn(),
+    backupDocument: jest.fn()
+};
+
+jest.mock('@/lib/storage/repositoryFactory', () => ({
+    getRepository: jest.fn(() => mockRepository)
 }));
 
 describe('Read API Endpoint', () => {
@@ -81,18 +88,21 @@ describe('Read API Endpoint', () => {
 
             expect(res._getStatusCode()).toBe(200);
             expect(JSON.parse(res._getData())).toEqual(localDocument);
-            expect(dynamoDb.send).not.toHaveBeenCalled();
+            expect(mockRepository.getDocument).not.toHaveBeenCalled();
         });
 
-        it('should retrieve document from DynamoDB', async () => {
+        it('should retrieve document from repository', async () => {
             const mockDocument = {
                 user_id: 'user123',
                 document_id: 'doc123',
-                content: 'Test content'
+                content: 'Test content',
+                hero_img: '',
+                media_item: '',
+                ordinal: '',
+                playlist: '',
+                title: ''
             };
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce({
-                Item: mockDocument
-            });
+            mockRepository.getDocument.mockResolvedValueOnce(mockDocument);
 
             const { req, res } = createMocks({
                 method: 'GET',
@@ -109,9 +119,7 @@ describe('Read API Endpoint', () => {
         });
 
         it('should return 404 when document is not found', async () => {
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce({
-                Item: undefined
-            });
+            mockRepository.getDocument.mockResolvedValueOnce(null);
 
             const { req, res } = createMocks({
                 method: 'GET',
@@ -131,7 +139,7 @@ describe('Read API Endpoint', () => {
 
         it('should handle database errors', async () => {
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
-            (dynamoDb.send as jest.Mock).mockRejectedValueOnce(new Error('DB Error'));
+            mockRepository.getDocument.mockRejectedValueOnce(new Error('DB Error'));
 
             const { req, res } = createMocks({
                 method: 'GET',
@@ -156,31 +164,32 @@ describe('Read API Endpoint', () => {
         it('should return local document for document_id "local"', async () => {
             const result = await getDocument('user123', 'local');
             expect(result).toEqual(localDocument);
-            expect(dynamoDb.send).not.toHaveBeenCalled();
+            expect(mockRepository.getDocument).not.toHaveBeenCalled();
         });
 
-        it('should query DynamoDB for non-local documents', async () => {
+        it('should query repository for non-local documents', async () => {
             const mockDocument = {
                 user_id: 'user123',
                 document_id: 'doc123',
-                content: 'Test content'
+                content: 'Test content',
+                hero_img: '',
+                media_item: '',
+                ordinal: '',
+                playlist: '',
+                title: ''
             };
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce({
-                Item: mockDocument
-            });
+            mockRepository.getDocument.mockResolvedValueOnce(mockDocument);
 
             const result = await getDocument('user123', 'doc123');
             expect(result).toEqual(mockDocument);
-            expect(dynamoDb.send).toHaveBeenCalledTimes(1);
+            expect(mockRepository.getDocument).toHaveBeenCalledTimes(1);
         });
 
-        it('should return undefined when document is not found', async () => {
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce({
-                Item: undefined
-            });
+        it('should return null when document is not found', async () => {
+            mockRepository.getDocument.mockResolvedValueOnce(null);
 
             const result = await getDocument('user123', 'nonexistent');
-            expect(result).toBeUndefined();
+            expect(result).toBeNull();
         });
     });
 });

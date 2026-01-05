@@ -1,14 +1,21 @@
 import { createMocks } from 'node-mocks-http';
 import createEndpoint from '../create';
-import { dynamoDb } from '@/lib/dynamodb';
 import { withAuth } from '../lib/withAuth';
 
-// Mock dependencies
-jest.mock('@/lib/dynamodb', () => ({
-    dynamoDb: {
-        send: jest.fn()
-    },
-    PutCommand: jest.fn()
+// Mock repository
+const mockRepository = {
+    getDocument: jest.fn(),
+    listDocuments: jest.fn(),
+    createDocument: jest.fn(),
+    updateDocument: jest.fn(),
+    deleteDocument: jest.fn(),
+    getConfig: jest.fn(),
+    updateConfig: jest.fn(),
+    backupDocument: jest.fn()
+};
+
+jest.mock('@/lib/storage/repositoryFactory', () => ({
+    getRepository: jest.fn(() => mockRepository)
 }));
 
 jest.mock('../lib/withAuth', () => ({
@@ -56,8 +63,12 @@ describe('Create API Endpoint', () => {
 
     describe('Document Creation', () => {
         it('should create document with provided document_id', async () => {
-            const mockData = { success: true };
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce(mockData);
+            const mockDocument = {
+                user_id: 'user123',
+                document_id: 'doc123',
+                content: 'Test content'
+            };
+            mockRepository.createDocument.mockResolvedValueOnce(mockDocument);
 
             const { req, res } = createMocks({
                 method: 'POST',
@@ -73,14 +84,17 @@ describe('Create API Endpoint', () => {
             expect(res._getStatusCode()).toBe(200);
             expect(JSON.parse(res._getData())).toEqual({
                 message: 'Post created',
-                document_id: 'doc123',
-                data: mockData
+                document_id: 'doc123'
             });
         });
 
         it('should generate document_id if not provided', async () => {
-            const mockData = { success: true };
-            (dynamoDb.send as jest.Mock).mockResolvedValueOnce(mockData);
+            const mockDocument = {
+                user_id: 'user123',
+                document_id: 'generated-id-123',
+                content: 'Test content'
+            };
+            mockRepository.createDocument.mockResolvedValueOnce(mockDocument);
 
             const { req, res } = createMocks({
                 method: 'POST',
@@ -101,7 +115,7 @@ describe('Create API Endpoint', () => {
 
         it('should handle database errors', async () => {
             const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => { });
-            (dynamoDb.send as jest.Mock).mockRejectedValueOnce(new Error('DB Error'));
+            mockRepository.createDocument.mockRejectedValueOnce(new Error('DB Error'));
 
             const { req, res } = createMocks({
                 method: 'POST',

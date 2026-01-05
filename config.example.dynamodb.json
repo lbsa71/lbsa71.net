@@ -1,0 +1,9 @@
+{
+  "storage": {
+    "type": "dynamodb",
+    "options": {
+      "tableName": "lbsa71_net",
+      "backupTableName": "lbsa71_net_backup"
+    }
+  }
+}

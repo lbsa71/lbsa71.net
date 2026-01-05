@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Application Configuration",
+  "description": "Configuration schema for lbsa71.net application",
+  "type": "object",
+  "properties": {
+    "storage": {
+      "description": "Storage backend configuration",
+      "type": "object",
+      "required": ["type", "options"],
+      "properties": {
+        "type": {
+          "description": "Storage backend type",
+          "type": "string",
+          "enum": ["dynamodb", "json"]
+        },
+        "options": {
+          "description": "Storage-specific options",
+          "oneOf": [
+            {
+              "description": "DynamoDB storage options",
+              "type": "object",
+              "required": ["tableName", "backupTableName"],
+              "properties": {
+                "tableName": {
+                  "type": "string",
+                  "description": "Main DynamoDB table name"
+                },
+                "backupTableName": {
+                  "type": "string",
+                  "description": "Backup DynamoDB table name"
+                }
+              }
+            },
+            {
+              "description": "JSON file storage options",
+              "type": "object",
+              "required": ["filePath", "backupPath"],
+              "properties": {
+                "filePath": {
+                  "type": "string",
+                  "description": "Path to JSON data file"
+                },
+                "backupPath": {
+                  "type": "string",
+                  "description": "Directory path for backup files"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

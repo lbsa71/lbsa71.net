@@ -1,24 +1,15 @@
-import { QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { dynamoDb } from "@/lib/dynamodb";
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import { ContentDocument } from "@/lib/getSite";
 import { localDocuments } from "./localDocuments";
+import { getRepository } from "@/lib/storage/repositoryFactory";
 
 export const listDocuments = async (user_id: string) => {
   if (user_id === "local") {
     return localDocuments;
   }
 
-  const queryCommand = new QueryCommand({
-    TableName: "lbsa71_net",
-    KeyConditionExpression: "user_id = :uid",
-    ExpressionAttributeValues: {
-      ":uid": user_id,
-    },
-  });
-
-  const data = await dynamoDb.send(queryCommand);
-  return data.Items as ContentDocument[] | undefined;
+  const repository = getRepository();
+  return await repository.listDocuments(user_id);
 };
 
 const handler = async (req: VercelRequest, res: VercelResponse) => {
