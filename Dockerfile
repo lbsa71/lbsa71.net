@@ -13,9 +13,9 @@ COPY packages/markdown-parser/package.json ./packages/markdown-parser/
 # Install all dependencies (including devDependencies for build)
 RUN npm ci
 
-# Install markdown parser dependencies
+# Install markdown parser dependencies (using npm install since no lock file)
 WORKDIR /app/packages/markdown-parser
-RUN npm ci
+RUN npm install
 
 # Stage 2: Builder
 FROM node:18-alpine AS builder
