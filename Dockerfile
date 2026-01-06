@@ -29,6 +29,12 @@ COPY --from=deps /app/packages/markdown-parser/node_modules ./packages/markdown-
 # Copy all source files
 COPY . .
 
+# Remove test files that might have been copied despite .dockerignore
+RUN find . -type d -name "__tests__" -exec rm -rf {} + 2>/dev/null || true
+RUN find . -type f -name "*.test.*" -delete 2>/dev/null || true
+RUN find . -type f -name "*.spec.*" -delete 2>/dev/null || true
+RUN rm -f jest.config.* jest.setup.* 2>/dev/null || true
+
 # Build markdown parser first (critical step)
 WORKDIR /app/packages/markdown-parser
 RUN npm run build

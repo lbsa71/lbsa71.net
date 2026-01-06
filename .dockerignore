@@ -18,13 +18,17 @@ dist
 .env
 .env*.local
 
-# Testing
+# Testing - IMPORTANT: Exclude all test files and directories
 coverage
-__tests__
-*.test.ts
-*.test.tsx
-*.test.js
-*.test.jsx
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.test.js
+**/*.test.jsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.spec.js
+**/*.spec.jsx
 jest.config.*
 jest.setup.*
 

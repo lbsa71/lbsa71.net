@@ -30,6 +30,7 @@ const EditList = ({ site }: { site: Site }) => {
       .listDocuments(user_id)
       .then(setDocuments)
       .catch((error) => console.error("Failed to fetch document", error));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user_id]);
 
   if (typeof user_id !== "string" || !site || !user || user.sub !== site.admin_user_id) {

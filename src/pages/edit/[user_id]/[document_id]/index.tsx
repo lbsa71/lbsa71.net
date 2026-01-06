@@ -48,6 +48,7 @@ const EditorPage = ({ _config }: { _config: Config }) => {
     ) {
       fetchDocument(user_id, document_id);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user_id, document_id]);
 
   return <MarkdownEditor _config={_config} document={document} setDocument={setDocument} />;

@@ -72,6 +72,7 @@ const AudioPlayer = ({ onTrackChange }: AudioPlayerProps) => {
   useEffect(() => {
     const currentIndex = getCurrentCuePointIndex();
     onTrackChange?.(currentIndex);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentTime, cuePoints, onTrackChange]);
 
   const isFirstCuePoint = currentTime === 0 || (cuePoints.length > 0 && currentTime <= cuePoints[0]);
