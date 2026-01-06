@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { AppProps } from "next/app";
 import type { NextPage, NextPageContext } from 'next/types';
+import Link from "next/link";
 import GlobalLayout from "../components/GlobalLayout";
 import { Config, findSiteByDomain, Site } from "../lib/getSite";
 import { AudioProvider } from "../context/AudioContext";
@@ -56,12 +57,12 @@ const MyApp = ({ Component, pageProps }: AppPropsWithSite) => {
     <AuthProvider>
       <AudioProvider>
         <GlobalLayout site={pageProps.site}>
-          <div style={{ position: 'absolute', top: 10, right: 10 }}>
+          <div style={{ position: 'fixed', bottom: 20, left: 20, zIndex: 1000 }}>
             <button onClick={() => setMenuOpen((prev) => !prev)}>
               Menu
             </button>
             {menuOpen && (
-              <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid #ccc', padding: '10px' }}>
+              <div style={{ position: 'absolute', bottom: '100%', marginBottom: '10px', left: 0, backgroundColor: 'white', border: '1px solid #ccc', padding: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
                 <AuthMenu />
               </div>
             )}
@@ -104,7 +105,7 @@ type AuthMenuProps = {
   className?: string;
 };
 
-const AuthMenu = ({ className }: AuthMenuProps) => {
+export const AuthMenu = ({ className }: AuthMenuProps) => {
   const { user, login, logout } = useAuth();
 
   return (
@@ -112,6 +113,9 @@ const AuthMenu = ({ className }: AuthMenuProps) => {
       {user ? (
         <div>
           <p>Welcome, {user.email}</p>
+          {user.email === 'lbsa71@gmail.com' && (
+            <Link href="/edit/st_ephan">Edit Documents</Link>
+          )}
           <button onClick={logout}>Logout</button>
         </div>
       ) : (
