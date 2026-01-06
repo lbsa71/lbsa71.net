@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   webpack: (config, { isServer }) => {
     // Don't bundle Node.js built-in modules in client-side code
     if (!isServer) {
