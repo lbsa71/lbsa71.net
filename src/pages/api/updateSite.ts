@@ -1,10 +1,10 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withAuth } from "./lib/withAuth";
 import { getRepository } from "@/lib/storage/repositoryFactory";
 import { findSiteByUserId } from "@/lib/getSite";
 import { getConfig } from "@/lib/dynamodb";
 
-const updateSiteHandler = async (req: NextApiRequest, res: NextApiResponse) => {
+const updateSiteHandler = async (req: VercelRequest, res: VercelResponse) => {
   const { user_id, info } = req.body;
 
   if (!user_id) {

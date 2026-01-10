@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { AuthMenu } from '../_app';
+import { AuthMenu } from '../pages/_app';
 
 // Mock the AuthContext
 const mockUseAuth = jest.fn();
