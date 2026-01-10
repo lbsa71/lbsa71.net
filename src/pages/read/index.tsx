@@ -20,7 +20,7 @@ export async function getServerSideProps(context: ReqContext) {
   if (!documents || documents.length === 0) {
     return {
       redirect: {
-        destination: withBasePath("/404"),
+        destination: "/404",
         permanent: false,
       },
     };
@@ -30,7 +30,7 @@ export async function getServerSideProps(context: ReqContext) {
     const { document_id } = documents[0];
     return {
       redirect: {
-        destination: withBasePath(`/read/${document_id}`),
+        destination: `/read/${document_id}`,
         permanent: false,
       },
     };

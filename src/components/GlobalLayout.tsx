@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { useEffect, ReactNode } from "react";
 import { Site } from "@/lib/getSite";
+import { withBasePath } from "@/lib/paths";
 
 type GlobalLayoutProps = {
   children: ReactNode;
@@ -11,7 +12,7 @@ const addCss = (theme: string): HTMLLinkElement => {
   const link = document.createElement("link");
   link.type = "text/css";
   link.rel = "stylesheet";
-  link.href = `/css/${theme}.css`;
+  link.href = withBasePath(`/css/${theme}.css`);
 
   document.head.appendChild(link);
   return link;
