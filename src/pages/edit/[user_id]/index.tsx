@@ -117,7 +117,7 @@ const EditList = ({ site: initialSite }: { site: Site }) => {
             {site.info ? (
               <p className="whitespace-pre-wrap">{site.info.substring(0, 100)}{site.info.length > 100 ? "..." : ""}</p>
             ) : (
-              <p className="italic">No info content set. Click "Add Info" to add content that will appear in the info modal.</p>
+              <p className="italic">No info content set. Click &quot;Add Info&quot; to add content that will appear in the info modal.</p>
             )}
           </div>
         )}
