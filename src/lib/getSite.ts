@@ -15,6 +15,7 @@ export type Site = {
   user_id: string;
   admin_user_id: string;
   urls: string[];
+  aliases?: string[];
   playlists: string[];
   feed?: string;
   theme: string;
@@ -85,7 +86,13 @@ export function findSiteByContext(config: Config, context: ReqContext): Site {
 }
 
 export function findSiteByDomain(config: Config, domain: string): Site {
-  const site = config.sites.find((site) => site.urls.includes(domain));
+  // First, try to find site by direct URL match
+  let site = config.sites.find((site) => site.urls.includes(domain));
+
+  // If not found, try to find site by alias
+  if (!site) {
+    site = config.sites.find((site) => site.aliases?.includes(domain));
+  }
 
   if (!site) {
     throw new Error(`Site configuration not found for domain: ${domain}`);
