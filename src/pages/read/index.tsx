@@ -10,8 +10,9 @@ import { wrapDocument } from "@/lib/wrapDocument";
 import Script from "next/script";
 import { fetchSiteByContext } from "@/lib/dynamodb";
 import { withBasePath } from "@/lib/paths";
+import { GetServerSidePropsContext } from "next";
 
-export async function getServerSideProps(context: ReqContext) {
+export async function getServerSideProps(context: GetServerSidePropsContext) {
   const site = await fetchSiteByContext(context);
   const { user_id } = site;
 
