@@ -4,6 +4,7 @@ import { fetchSiteByContext, fetchSiteByUserId } from "@/lib/dynamodb";
 import { createAuthenticatedOperations } from "@/lib/http";
 import { GetServerSidePropsContext } from "next";
 import { useEffect, useState } from "react";
+import { withBasePath } from "@/lib/paths";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
@@ -58,7 +59,7 @@ const EditList = ({ site }: { site: Site }) => {
             return (
               <li key={doc.document_id} className="flex items-center gap-2">
                 <a
-                  href={`/edit/${doc.user_id}/${doc.document_id}`}
+                  href={withBasePath(`/edit/${doc.user_id}/${doc.document_id}`)}
                   className="text-blue-600 hover:underline"
                 >
                   {title}

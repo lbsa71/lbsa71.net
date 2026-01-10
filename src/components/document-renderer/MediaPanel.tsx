@@ -4,6 +4,7 @@ import MediaItem from "../MediaItem";
 import { Slideshow } from "../Slideshow";
 import { ContentDocument } from "../../lib/getSite";
 import { TrackInfo, ImageInfo } from "./types";
+import { withBasePath } from "../../lib/paths";
 
 type MediaPanelProps = {
   hero_img?: string;
@@ -68,7 +69,7 @@ export const MediaPanel = ({
             {playListItems.map((item) => (
               <li key={item.document_id}>
                 <a
-                  href={`/read/${item.document_id}`}
+                  href={withBasePath(`/read/${item.document_id}`)}
                   className={styles["playlist-item"]}
                 >
                   {item.title}

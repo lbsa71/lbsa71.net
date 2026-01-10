@@ -39,6 +39,9 @@ RUN rm -f jest.config.* jest.setup.* 2>/dev/null || true
 WORKDIR /app/packages/markdown-parser
 RUN npm run build
 
+# Set base path for production build
+ENV NEXT_PUBLIC_BASE_PATH=/projects/blog
+
 # Build Next.js application
 WORKDIR /app
 RUN npm run build

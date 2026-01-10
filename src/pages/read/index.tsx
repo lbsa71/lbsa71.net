@@ -9,6 +9,7 @@ import { safe } from "@/lib/safe";
 import { wrapDocument } from "@/lib/wrapDocument";
 import Script from "next/script";
 import { fetchSiteByContext } from "@/lib/dynamodb";
+import { withBasePath } from "@/lib/paths";
 
 export async function getServerSideProps(context: ReqContext) {
   const site = await fetchSiteByContext(context);
@@ -19,7 +20,7 @@ export async function getServerSideProps(context: ReqContext) {
   if (!documents || documents.length === 0) {
     return {
       redirect: {
-        destination: "/404",
+        destination: withBasePath("/404"),
         permanent: false,
       },
     };
@@ -29,7 +30,7 @@ export async function getServerSideProps(context: ReqContext) {
     const { document_id } = documents[0];
     return {
       redirect: {
-        destination: `/read/${document_id}`,
+        destination: withBasePath(`/read/${document_id}`),
         permanent: false,
       },
     };
@@ -104,7 +105,7 @@ const List = ({
                     const title = doc.title ?? doc.document_id;
                     return (
                       <li key={doc.document_id}>
-                        <a href={`/read/${doc.document_id}`}>{title}</a>
+                        <a href={withBasePath(`/read/${doc.document_id}`)}>{title}</a>
                       </li>
                     );
                   })}

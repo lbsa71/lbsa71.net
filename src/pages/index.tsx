@@ -1,6 +1,7 @@
 import { GetServerSidePropsContext } from "next";
 import { getDocument } from "./api/read";
 import { fetchSiteByContext } from "@/lib/dynamodb";
+import { withBasePath } from "@/lib/paths";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
@@ -17,7 +18,7 @@ export const getServerSideProps = async (
 
     return {
       redirect: {
-        destination: "/read",
+        destination: withBasePath("/read"),
         permanent: false,
       },
     };

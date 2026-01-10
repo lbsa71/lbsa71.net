@@ -6,6 +6,7 @@ import getConfig from "next/config";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getApiPath } from "@/lib/paths";
 
 export const defaultDocument: ContentDocument = {
   hero_img: "",
@@ -36,7 +37,7 @@ const EditorPage = ({ _config }: { _config: Config }) => {
     }
 
     try {
-      const { data } = await axios.get<{ hasPermission: boolean }>("/api/checkPermission", {
+      const { data } = await axios.get<{ hasPermission: boolean }>(getApiPath("/api/checkPermission"), {
         headers: { Authorization: `Bearer ${token}` },
         params: { user_id: userId },
       });

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { ContentDocument } from './getSite';
+import { getApiPath } from './paths';
 
-const BASE_URL = '/api';
+const BASE_URL = getApiPath('/api');
 
 // Factory functions that create authenticated operations
 export const createAuthenticatedOperations = (token: string | null) => {
