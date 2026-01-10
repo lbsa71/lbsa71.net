@@ -21,7 +21,7 @@ export async function getServerSideProps(context: ReqContext) {
     return {
       redirect: {
         destination: "/404",
-        permanent: false,
+        permanent: true,
       },
     };
   }
@@ -31,7 +31,7 @@ export async function getServerSideProps(context: ReqContext) {
     return {
       redirect: {
         destination: `/read/${document_id}`,
-        permanent: false,
+        permanent: true,
       },
     };
   }

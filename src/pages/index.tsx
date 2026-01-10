@@ -18,7 +18,7 @@ export const getServerSideProps = async (
     return {
       redirect: {
         destination: "/read",
-        permanent: false,
+        permanent: true,
       },
     };
   }
