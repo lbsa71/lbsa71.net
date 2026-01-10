@@ -1,6 +1,7 @@
 import { GetServerSidePropsContext } from "next";
 import { getDocument } from "./api/read";
 import { fetchSiteByContext } from "@/lib/dynamodb";
+import { withBasePath } from "@/lib/paths";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
@@ -13,6 +14,13 @@ export const getServerSideProps = async (
       return {
         redirect,
       };
+    }
+
+    // Use 301 instead of 308 by manually setting status code
+    if (context.res) {
+      context.res.writeHead(301, { Location: withBasePath("/read") });
+      context.res.end();
+      return { props: {} };
     }
 
     return {

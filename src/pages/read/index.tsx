@@ -18,6 +18,12 @@ export async function getServerSideProps(context: ReqContext) {
   const documents = (await listDocuments(user_id))?.map(wrapDocument);
 
   if (!documents || documents.length === 0) {
+    // Use 301 instead of 308 by manually setting status code
+    if (context.res) {
+      context.res.writeHead(301, { Location: withBasePath("/404") });
+      context.res.end();
+      return { props: {} };
+    }
     return {
       redirect: {
         destination: "/404",
@@ -28,6 +34,12 @@ export async function getServerSideProps(context: ReqContext) {
 
   if (documents.length === 1) {
     const { document_id } = documents[0];
+    // Use 301 instead of 308 by manually setting status code
+    if (context.res) {
+      context.res.writeHead(301, { Location: withBasePath(`/read/${document_id}`) });
+      context.res.end();
+      return { props: {} };
+    }
     return {
       redirect: {
         destination: `/read/${document_id}`,
