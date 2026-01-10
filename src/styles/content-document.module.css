@@ -59,7 +59,7 @@
 .content-document-container .hero-image {
   width: 100%;
   height: auto;
-  max-height: calc(100vh - 200px);
+  max-height: 40vh;
   /* Give space for media player while maintaining aspect ratio */
   object-fit: contain;
   border-radius: 4px;
@@ -67,11 +67,13 @@
 
 /* Container for the hero image to maintain aspect ratio */
 .media-panel>div:first-child {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
-  /* Allow container to shrink */
+  max-height: 40vh;
+  /* Prevent container from growing and covering audio player */
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  overflow: hidden;
 }
 
 .content-document-container .document-panel {
