@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ContentDocument } from './getSite';
+import { ContentDocument, Site } from './getSite';
 import { getApiPath } from './paths';
 
 const BASE_URL = getApiPath('/api');
@@ -39,6 +39,14 @@ export const createAuthenticatedOperations = (token: string | null) => {
                 headers,
                 params: { user_id: userId, document_id: documentId },
             });
+            return data;
+        },
+
+        updateSiteInfo: async (userId: string, info: string): Promise<Site> => {
+            const { data } = await axios.post<Site>(`${BASE_URL}/updateSite`, {
+                user_id: userId,
+                info,
+            }, { headers });
             return data;
         },
     };

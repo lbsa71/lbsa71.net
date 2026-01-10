@@ -59,14 +59,14 @@ export class DynamoDBRepository implements DocumentRepository {
   }
 
   async updateDocument(document: ContentDocument): Promise<ContentDocument> {
-    const { user_id, document_id, content, hero_img, media_item, playlist, ordinal, title } = document;
+    const { user_id, document_id, content, hero_img, media_item, playlist, ordinal, title, info } = document;
 
     const result = await this.client.send(
       new UpdateCommand({
         TableName: this.tableName,
         Key: { user_id, document_id },
         UpdateExpression:
-          'set content = :content, media_item = :media_item, hero_img = :hero_img, playlist = :playlist, ordinal = :ordinal, title = :title',
+          'set content = :content, media_item = :media_item, hero_img = :hero_img, playlist = :playlist, ordinal = :ordinal, title = :title, info = :info',
         ExpressionAttributeValues: {
           ':content': content,
           ':hero_img': hero_img || null,
@@ -74,6 +74,7 @@ export class DynamoDBRepository implements DocumentRepository {
           ':playlist': playlist || null,
           ':ordinal': ordinal || null,
           ':title': title || null,
+          ':info': info || null,
         },
         ReturnValues: 'ALL_NEW',
       })
@@ -146,6 +147,7 @@ export class DynamoDBRepository implements DocumentRepository {
           playlist: document.playlist,
           ordinal: document.ordinal,
           title: document.title,
+          info: document.info || null,
         },
       })
     );

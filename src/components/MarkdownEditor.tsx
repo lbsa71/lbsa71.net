@@ -106,6 +106,18 @@ const MarkdownRenderer = ({
           style={{ flex: 1, padding: "10px", minHeight: "300px" }}
         />
         <MarkdownSyntaxHelp />
+        
+        <div style={{ marginTop: "20px", marginBottom: "10px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            Info (optional - markdown content for info modal):
+          </label>
+          <textarea
+            placeholder="Enter markdown for info modal (optional)"
+            value={document.info || ""}
+            onChange={handleInputChange("info")}
+            style={{ width: "100%", padding: "10px", minHeight: "150px", fontFamily: "monospace", fontSize: "12px" }}
+          />
+        </div>
 
         <div style={{ marginTop: "10px" }}>
           <button

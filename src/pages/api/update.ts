@@ -13,6 +13,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
     playlist,
     ordinal,
     title,
+    info,
   } = req.body;
 
   if (!user_id || !document_id || !content) {
@@ -31,6 +32,7 @@ const updateHandler = async (req: VercelRequest, res: VercelResponse) => {
       playlist: playlist || '',
       ordinal: ordinal || '',
       title: title || '',
+      ...(info !== undefined && info !== null ? { info } : {}),
     };
 
     // Create backup before update

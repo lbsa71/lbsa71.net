@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { ContentDocument, Site } from "../lib/getSite";
 import styles from "../styles/content-document.module.css";
 import { DocumentProvider } from "../context/DocumentContext";
@@ -9,6 +9,7 @@ import { parseMarkdown } from "../lib/newMarkDownParser";
 import { MediaPanel } from "./document-renderer/MediaPanel";
 import { DocumentPanel } from "./document-renderer/DocumentPanel";
 import { useTrackManagement } from "./document-renderer/useTrackManagement";
+import { InfoModal } from "./InfoModal";
 
 type DocumentRendererProps = {
   site: Site;
@@ -21,14 +22,18 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   const { currentTime, duration } = useAudio();
   const highlightedRef = useRef<HTMLParagraphElement>(null);
   const play = "play" in router.query;
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   const contentDocument = typeof document === "string"
     ? documents.find((doc) => doc.document_id === document) ?? 
       (() => { throw new Error(`Document not found: ${document}`) })()
     : document;
 
-  const { document_id, user_id, content, hero_img, media_item, playlist } = contentDocument;
+  const { document_id, user_id, content, hero_img, media_item, playlist, info } = contentDocument;
   const { media_url } = site;
+  
+  // Only use document info - never fall back to site info
+  const infoContent = (info && info.trim()) || undefined;
 
   const playListItems = documents
     .filter((doc) => doc.playlist === playlist)
@@ -59,6 +64,24 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
   return (
     <DocumentProvider value={{ user_id, document_id }}>
       <div className={styles["content-document-container"]}>
+        {infoContent && (
+          <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 1000 }}>
+            <button
+              onClick={() => setIsInfoModalOpen(true)}
+              style={{
+                padding: '8px 16px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                backgroundColor: '#f0f0f0',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                color: '#333',
+              }}
+            >
+              Info
+            </button>
+          </div>
+        )}
         {mediaPanel && (
           <MediaPanel
             hero_img={hero_img}
@@ -80,6 +103,14 @@ export const DocumentRenderer = ({ site, document, documents }: DocumentRenderer
           highlightedRef={highlightedRef}
         />
       </div>
+      {infoContent && (
+        <InfoModal
+          info={infoContent}
+          media_url={media_url}
+          isOpen={isInfoModalOpen}
+          onClose={() => setIsInfoModalOpen(false)}
+        />
+      )}
     </DocumentProvider>
   );
 };

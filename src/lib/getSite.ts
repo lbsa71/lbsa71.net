@@ -24,6 +24,7 @@ export type Site = {
   byline: string;
   banner?: string;
   redirect?: Redirect;
+  info?: string;
 };
 
 type SiteConfig = Partial<Omit<Site, 'user_id' | 'urls' | 'admin_user_id'>> & {
@@ -58,6 +59,7 @@ export type ContentDocument = {
   playlist: string;
   title: string;
   user_id: string;
+  info?: string;
 };
 
 export type RequestHeaders = {

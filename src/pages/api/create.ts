@@ -5,7 +5,7 @@ import { getRepository } from "@/lib/storage/repositoryFactory";
 import { ContentDocument } from "@/lib/getSite";
 
 const createHandler = async (req: VercelRequest, res: VercelResponse) => {
-  const { user_id, content } = req.body;
+  const { user_id, content, info } = req.body;
 
   if (!user_id || !content) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -37,7 +37,8 @@ const createHandler = async (req: VercelRequest, res: VercelResponse) => {
       media_item: '',
       ordinal: '',
       playlist: '',
-      title: ''
+      title: '',
+      ...(info !== undefined && info !== null ? { info } : {}),
     };
 
     await repository.createDocument(document);
