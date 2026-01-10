@@ -62,6 +62,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy config.json and data directory (needed for JSON file storage)
+COPY --from=builder --chown=nextjs:nodejs /app/config.json ./config.json
+COPY --from=builder --chown=nextjs:nodejs /app/data ./data
+
 # Switch to non-root user
 USER nextjs
 
